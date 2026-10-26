@@ -259,7 +259,7 @@ async fn seeded_successful_and_mixed_workloads() {
                         1 => Some(0),
                         _ => Some(1),
                     },
-                    next(&mut rng) % 2 == 0,
+                    next(&mut rng).is_multiple_of(2),
                 )
             })
             .collect();

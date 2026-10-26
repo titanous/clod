@@ -12,6 +12,22 @@ struct Server {
 }
 impl Drop for Server {
     fn drop(&mut self) {
+        if std::thread::panicking() {
+            // Never turn a test failure into a second panic during unwinding.
+            let remaining: Vec<_> = fs::read_dir(self.scenario.parent().unwrap_or(&self.scenario))
+                .into_iter()
+                .flatten()
+                .filter_map(Result::ok)
+                .filter(|entry| entry.path().extension().is_some_and(|e| e == "log"))
+                .filter_map(|entry| fs::read_to_string(entry.path()).ok())
+                .filter_map(|text| serde_json::from_str::<Value>(text.lines().next()?).ok())
+                .filter_map(|record| record["pid"].as_i64())
+                .filter(|pid| unsafe { libc::kill(*pid as i32, 0) == 0 })
+                .collect();
+            eprintln!("test unwinding; skipping cleanup wait/assert; surviving fake CLI PIDs: {remaining:?}");
+            let _ = self.child.start_kill();
+            return;
+        }
         // HTTP completion precedes runner cleanup. Keep the external server alive
         // until it has reaped every fake CLI, including timeout/hang scenarios.
         let deadline = std::time::Instant::now() + Duration::from_secs(8);
