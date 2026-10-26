@@ -12,7 +12,29 @@ struct Server {
 }
 impl Drop for Server {
     fn drop(&mut self) {
+        // HTTP completion precedes runner cleanup. Keep the external server alive
+        // until it has reaped every fake CLI, including timeout/hang scenarios.
+        let deadline = std::time::Instant::now() + Duration::from_secs(8);
+        let remaining = loop {
+            let remaining: Vec<_> = self
+                .logs()
+                .iter()
+                .filter_map(|log| log.first()?["pid"].as_i64())
+                .filter(|pid| {
+                    // SAFETY: signal zero checks existence without sending a signal.
+                    unsafe { libc::kill(*pid as i32, 0) == 0 }
+                })
+                .collect();
+            if remaining.is_empty() || std::time::Instant::now() >= deadline {
+                break remaining;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        };
         let _ = self.child.start_kill();
+        assert!(
+            remaining.is_empty(),
+            "server left fake CLI processes: {remaining:?}"
+        );
     }
 }
 fn fixture(name: &str) -> String {
@@ -211,6 +233,22 @@ async fn waiting_same_key_does_not_take_global_permit() {
     .unwrap();
     assert_eq!(response.status(), 200);
     assert_eq!(pending.await.unwrap().unwrap().status(), 200);
+}
+
+#[tokio::test]
+async fn dropping_server_after_timeout_waits_for_child_reaping() {
+    let server = Server::start(json!({"no_stdin":true}), None, false, false).await;
+    let response = server.post(&request(false)).send().await.unwrap();
+    assert_eq!(response.status(), 500);
+    assert!(response.text().await.unwrap().contains("timed out"));
+    let pid = server.logs()[0][0]["pid"].as_i64().unwrap() as i32;
+    drop(server);
+    // SAFETY: signal zero checks existence without sending a signal.
+    assert_eq!(
+        unsafe { libc::kill(pid, 0) },
+        -1,
+        "fake CLI {pid} survived teardown"
+    );
 }
 
 #[tokio::test]
