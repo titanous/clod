@@ -467,6 +467,127 @@ proptest! {
         for line in lines { e.on_stdout_line(&line,1); }
     }
 }
+fn response(actions: &[(usize, Action)]) -> &Value {
+    actions.iter().find_map(|(_,a)| if let Action::RespondJson(200,v)=a {Some(v)}else{None}).unwrap()
+}
+fn committed(actions: &[(usize, Action)]) -> Option<&session::Checkpoint> {
+    actions.iter().find_map(|(_,a)| if let Action::Done(d)=a {if let MapEffect::Commit(cp)=&d.map_effect {Some(cp)}else{None}}else{None})
+}
+#[test]
+fn thinking_only_and_redacted_with_and_without_stream_records() {
+    for blocks in [
+        vec![json!({"type":"thinking","thinking":"reason é","signature":"signed"})],
+        vec![json!({"type":"redacted_thinking","data":"opaque 🦀"})],
+        vec![json!({"type":"thinking","thinking":"reason","signature":"signed"}),json!({"type":"redacted_thinking","data":"opaque"})],
+    ] {
+        for streamed in [false,true] {
+            let mut lines=vec![];
+            if streamed {
+                lines.push(event(json!({"type":"message_start","message":{"id":"msg","content":[]}})));
+                for (i,b) in blocks.iter().enumerate() {
+                    lines.push(event(json!({"type":"content_block_start","index":i,"content_block":b})));
+                    lines.push(event(json!({"type":"content_block_stop","index":i})));
+                }
+                lines.push(event(json!({"type":"message_delta","delta":{"stop_reason":"end_turn"}})));
+                lines.push(event(json!({"type":"message_stop"})));
+            }
+            lines.push(json!({"type":"assistant","uuid":"thinking-final","session_id":"fork","message":{"content":blocks,"stop_reason":"end_turn"}}));
+            lines.push(json!({"type":"result","subtype":"success","session_id":"fork"}));
+            let buffered=run(&lines,false);
+            assert_eq!(response(&buffered)["content"],json!(blocks));
+            // With no message_delta the contract leaves stop_reason fallback unspecified.
+            if streamed {assert_eq!(response(&buffered)["stop_reason"],"end_turn");}
+            let cp=committed(&buffered).expect("thinking-only checkpoint");
+            assert_eq!(cp.resume_uuid,"thinking-final");assert!(cp.pending_tool_ids.is_empty());
+            if streamed {
+                let s=run(&lines,true);
+                assert_eq!(accumulate(&s),json!({"content":blocks,"stop_reason":"end_turn"}));
+                assert_eq!(committed(&s),Some(cp));
+            }
+        }
+    }
+}
+#[test]
+fn model_tool_name_observations() {
+    // The docs specify stripping the oc prefix but not rejecting undeclared
+    // prefixed calls. These assertions pin translation, not an authorization policy.
+    for (wire,client,checkpoint) in [
+        ("Bash","Bash",false),
+        ("mcp__other__x","mcp__other__x",false),
+        ("mcp__oc__undeclared","undeclared",true),
+        ("mcp__oc__","",true),
+        ("lookup","lookup",true),
+    ] {
+        let block=json!({"type":"tool_use","id":"tool","name":wire,"input":{}});
+        let expected=json!({"type":"tool_use","id":"tool","name":client,"input":{}});
+        let lines=vec![event(json!({"type":"message_start","message":{"content":[]}})),
+            event(json!({"type":"content_block_start","index":0,"content_block":block})),
+            hook("name-hook"),event(json!({"type":"content_block_stop","index":0})),
+            json!({"type":"assistant","uuid":"tool-record","session_id":"fork","message":{"content":[block]}}),
+            event(json!({"type":"message_delta","delta":{"stop_reason":"tool_use"}})),event(json!({"type":"message_stop"})),
+            json!({"type":"result","subtype":"success","session_id":"fork"})];
+        let b=run(&lines,false);let s=run(&lines,true);
+        assert_eq!(response(&b)["content"],json!([expected]));
+        assert_eq!(accumulate(&s),json!({"content":[expected],"stop_reason":"tool_use"}));
+        assert_eq!(committed(&b).is_some(),checkpoint,"{wire}");
+        let replies:Vec<_>=b.iter().filter_map(|(_,a)|if let Action::WriteStdin(raw)=a {Some(serde_json::from_str::<Value>(raw).unwrap())}else{None}).collect();
+        assert_eq!(replies.len(),1);assert_eq!(replies[0]["response"]["response"]["hookSpecificOutput"]["permissionDecision"],"deny");
+    }
+}
+fn grouped_schedule(group_bits: &[bool], positions: &[u8], assistant_first: bool) {
+    let t=Turn{kinds:vec![1,2,2,2],payload:"🦀".into(),cuts:vec![1,3,7],invalid:0};
+    let (original,expected)=t.build();
+    let mut base:Vec<_>=original.into_iter().filter(|l|l["type"]!="assistant" && l["request"]["subtype"]!="hook_callback").collect();
+    let mut records=vec![];let mut group=vec![];
+    for (i,b) in expected.iter().enumerate() {
+        let mut b=b.clone();if b["type"]=="tool_use" {b["name"]=json!("mcp__oc__lookup");}group.push(b);
+        if i==expected.len()-1||group_bits.get(i).copied().unwrap_or(false) {
+            records.push(json!({"type":"assistant","uuid":format!("group-{i}"),"session_id":"fork","message":{"content":group}}));group.clear();
+        }
+    }
+    let last_uuid=records.last().unwrap()["uuid"].clone();
+    let insert=if assistant_first {0}else{base.len()-1};
+    base.splice(insert..insert,records);
+    // Unique request IDs but duplicated tool IDs; also a never-streamed ID.
+    // The same JSON-RPC request retransmitted twice has no specified dedup policy.
+    for (i,p) in positions.iter().enumerate() {
+        let mut h=hook(&format!("scheduled-{i}"));
+        h["request"]["tool_use_id"]=json!(if i%3==0 {"never-streamed"}else{"tool-1"});
+        h["request"]["input"]["tool_use_id"]=h["request"]["tool_use_id"].clone();
+        let at=*p as usize % (base.len()+1);base.insert(at,h);
+    }
+    let b=run(&base,false);let s=run(&base,true);
+    assert_eq!(response(&b)["content"],json!(expected));
+    assert_eq!(accumulate(&s),json!({"content":expected,"stop_reason":"tool_use"}));
+    assert_eq!(committed(&b).unwrap().resume_uuid,last_uuid.as_str().unwrap());
+    for (i,line) in base.iter().enumerate().filter(|(_,l)|l["request"]["subtype"]=="hook_callback") {
+        let result=base.iter().position(|l|l["type"]=="result").unwrap();
+        let replies:Vec<_>=b.iter().filter_map(|(at,a)| if let Action::WriteStdin(raw)=a {let v:Value=serde_json::from_str(raw).unwrap();if v["response"]["request_id"]==line["request_id"] {Some((*at,v))}else{None}}else{None}).collect();
+        // Result begins shutdown; late callbacks are intentionally unhandled.
+        if i>result {assert!(replies.is_empty());}else{assert_eq!(replies.len(),1);assert_eq!(replies[0].1["response"]["response"]["hookSpecificOutput"]["permissionDecision"],"deny");}
+    }
+}
+proptest! {
+    #[test]
+    fn assistant_grouping_and_hook_permutations(bits in prop::collection::vec(any::<bool>(),0..5), positions in prop::collection::vec(any::<u8>(),0..12), first in any::<bool>()) {
+        grouped_schedule(&bits,&positions,first);
+    }
+}
+#[test]
+fn interleaved_indexes_reassemble_like_stream() {
+    let lines=vec![
+        event(json!({"type":"message_start","message":{"content":[]}})),
+        event(json!({"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}})),
+        event(json!({"type":"content_block_start","index":1,"content_block":{"type":"text","text":""}})),
+        event(json!({"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"first"}})),
+        event(json!({"type":"content_block_delta","index":1,"delta":{"type":"text_delta","text":"second"}})),
+        event(json!({"type":"content_block_stop","index":1})),event(json!({"type":"content_block_stop","index":0})),
+        json!({"type":"assistant","session_id":"fork","uuid":"final","message":{"content":[{"type":"text","text":"first"},{"type":"text","text":"second"}]}}),
+        event(json!({"type":"message_delta","delta":{"stop_reason":"end_turn"}})),event(json!({"type":"message_stop"})),
+        json!({"type":"result","subtype":"success","session_id":"fork"})];
+    let b=run(&lines,false);let s=run(&lines,true);
+    assert_eq!(accumulate(&s),json!({"content":response(&b)["content"],"stop_reason":response(&b)["stop_reason"]}));
+}
 #[test]
 fn coverage_census() {
     use proptest::{
