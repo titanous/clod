@@ -31,6 +31,24 @@ fn values() -> BoxedStrategy<Value> {
     })
     .boxed()
 }
+// Build wire JSON independently, visiting object entries in reverse order.
+fn reverse_wire(value: &Value) -> String {
+    match value {
+        Value::Object(map) => format!(
+            "{{{}}}",
+            map.iter()
+                .rev()
+                .map(|(k, v)| format!("{}: {}", serde_json::to_string(k).unwrap(), reverse_wire(v)))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+        Value::Array(a) => format!(
+            "[{}]",
+            a.iter().map(reverse_wire).collect::<Vec<_>>().join(", ")
+        ),
+        other => serde_json::to_string(other).unwrap(),
+    }
+}
 fn blocks(v: Value, s: &str) -> Vec<Value> {
     vec![
         json!({"type":"text","text":s}),
@@ -90,6 +108,8 @@ proptest! {
         let bytes = session::canonical_json(&v);
         let decoded: Value = serde_json::from_slice(&bytes).unwrap();
         prop_assert_eq!(&decoded, &v);
+        let reversed: Value = serde_json::from_str(&reverse_wire(&v)).unwrap();
+        prop_assert_eq!(&bytes, &session::canonical_json(&reversed));
         prop_assert_eq!(&bytes, &session::canonical_json(&decoded));
         prop_assert_eq!(&bytes, &session::canonical_json(&v));
     }
