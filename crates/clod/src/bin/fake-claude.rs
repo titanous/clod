@@ -35,7 +35,12 @@ struct Log {
     path: PathBuf,
     bytes: Vec<u8>,
 }
-fn record(file: &Mutex<Log>, value: Value) {
+fn record(file: &Mutex<Log>, mut value: Value) {
+    value["recorded_ns"] = json!(std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_nanos()
+        .to_string());
     let mut log = file.lock().unwrap();
     writeln!(log.bytes, "{value}").unwrap();
     // Shell tests inspect logs before the child exits. Publish a complete
@@ -185,7 +190,8 @@ fn published_logs_are_complete_snapshots() {
         .lines()
         .map(|line| serde_json::from_str(line).unwrap())
         .collect();
-    assert_eq!(old, vec![json!({"first":true})]);
+    assert_eq!(old.len(), 1);
+    assert_eq!(old[0]["first"], true);
     assert_eq!(new.len(), 2);
     assert_eq!(new[1]["second"].as_str().unwrap().len(), 65536);
     assert!(!path.with_extension("tmp").exists());
