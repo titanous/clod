@@ -1,0 +1,382 @@
+[
+  {
+    "run": "haiku-canary-node-1",
+    "upstream_message_requests": 1,
+    "usage": [
+      {
+        "kind": "spawn",
+        "request": 1,
+        "attempt": 1,
+        "plan": "fresh",
+        "key_mode": "Strict"
+      },
+      {
+        "kind": "usage",
+        "request": 1,
+        "attempt": 1,
+        "event": "message_start",
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 18814,
+          "cache_read_input_tokens": 12885,
+          "output_tokens": 8,
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 18814,
+            "ephemeral_5m_input_tokens": 0
+          }
+        }
+      },
+      {
+        "kind": "usage",
+        "request": 1,
+        "attempt": 1,
+        "event": "message_delta",
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 18814,
+          "cache_read_input_tokens": 12885,
+          "output_tokens": 9
+        }
+      },
+      {
+        "kind": "usage",
+        "request": 1,
+        "attempt": 1,
+        "event": "result",
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 18814,
+          "cache_read_input_tokens": 12885,
+          "output_tokens": 9,
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 18814,
+            "ephemeral_5m_input_tokens": 0
+          }
+        }
+      }
+    ],
+    "incoming": [
+      {
+        "index": 1,
+        "tool_count": 36,
+        "tool_names": null,
+        "context_hashes": {
+          "/system": "14f20019c6beffecf766c85cb88992659f492ba5f4806b649cccae7a05664d80",
+          "/tools": "855502812f0f1427d8047bb808ee25f4f4c123cd80ced93421a3876d885eecc9"
+        }
+      }
+    ],
+    "cleanup_project": "<HOME>/.claude/projects/-var-folders-m4-kmdr4ndn2lv0yxvnlcb6v5gh0000gn-T-clod-cache-measure-8syc4yd4-workdir"
+  },
+  {
+    "run": "haiku-node-strict-daemon",
+    "upstream_message_requests": 5,
+    "usage": [
+      {
+        "kind": "spawn",
+        "request": 1,
+        "attempt": 1,
+        "plan": "fresh",
+        "key_mode": "Strict"
+      },
+      {
+        "kind": "usage",
+        "request": 1,
+        "attempt": 1,
+        "event": "message_start",
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 18805,
+          "cache_read_input_tokens": 12885,
+          "output_tokens": 24,
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 18805,
+            "ephemeral_5m_input_tokens": 0
+          }
+        }
+      },
+      {
+        "kind": "usage",
+        "request": 1,
+        "attempt": 1,
+        "event": "message_delta",
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 18805,
+          "cache_read_input_tokens": 12885,
+          "output_tokens": 58
+        }
+      },
+      {
+        "kind": "usage",
+        "request": 1,
+        "attempt": 1,
+        "event": "result",
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 18805,
+          "cache_read_input_tokens": 12885,
+          "output_tokens": 58,
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 18805,
+            "ephemeral_5m_input_tokens": 0
+          }
+        }
+      },
+      {
+        "kind": "spawn",
+        "request": 2,
+        "attempt": 1,
+        "plan": "fresh",
+        "key_mode": "Strict"
+      },
+      {
+        "kind": "usage",
+        "request": 2,
+        "attempt": 1,
+        "event": "message_start",
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 852,
+          "cache_read_input_tokens": 31079,
+          "output_tokens": 5,
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 852,
+            "ephemeral_5m_input_tokens": 0
+          }
+        }
+      },
+      {
+        "kind": "usage",
+        "request": 2,
+        "attempt": 1,
+        "event": "message_delta",
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 852,
+          "cache_read_input_tokens": 31079,
+          "output_tokens": 260
+        }
+      },
+      {
+        "kind": "usage",
+        "request": 2,
+        "attempt": 1,
+        "event": "result",
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 852,
+          "cache_read_input_tokens": 31079,
+          "output_tokens": 260,
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 852,
+            "ephemeral_5m_input_tokens": 0
+          }
+        }
+      },
+      {
+        "kind": "spawn",
+        "request": 3,
+        "attempt": 1,
+        "plan": "fresh",
+        "key_mode": "Strict"
+      },
+      {
+        "kind": "usage",
+        "request": 3,
+        "attempt": 1,
+        "event": "message_start",
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 983,
+          "cache_read_input_tokens": 31079,
+          "output_tokens": 6,
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 983,
+            "ephemeral_5m_input_tokens": 0
+          }
+        }
+      },
+      {
+        "kind": "usage",
+        "request": 3,
+        "attempt": 1,
+        "event": "message_delta",
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 983,
+          "cache_read_input_tokens": 31079,
+          "output_tokens": 247
+        }
+      },
+      {
+        "kind": "usage",
+        "request": 3,
+        "attempt": 1,
+        "event": "result",
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 983,
+          "cache_read_input_tokens": 31079,
+          "output_tokens": 247,
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 983,
+            "ephemeral_5m_input_tokens": 0
+          }
+        }
+      },
+      {
+        "kind": "spawn",
+        "request": 4,
+        "attempt": 1,
+        "plan": "fresh",
+        "key_mode": "Strict"
+      },
+      {
+        "kind": "spawn",
+        "request": 5,
+        "attempt": 1,
+        "plan": "fresh",
+        "key_mode": "Strict"
+      },
+      {
+        "kind": "usage",
+        "request": 4,
+        "attempt": 1,
+        "event": "message_start",
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 1547,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 3,
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 1547,
+            "ephemeral_5m_input_tokens": 0
+          }
+        }
+      },
+      {
+        "kind": "usage",
+        "request": 5,
+        "attempt": 1,
+        "event": "message_start",
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 1112,
+          "cache_read_input_tokens": 31079,
+          "output_tokens": 3,
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 1112,
+            "ephemeral_5m_input_tokens": 0
+          }
+        }
+      },
+      {
+        "kind": "usage",
+        "request": 4,
+        "attempt": 1,
+        "event": "message_delta",
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 1547,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 3
+        }
+      },
+      {
+        "kind": "usage",
+        "request": 4,
+        "attempt": 1,
+        "event": "result",
+        "usage": {
+          "input_tokens": 0,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 0,
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          }
+        }
+      },
+      {
+        "kind": "usage",
+        "request": 5,
+        "attempt": 1,
+        "event": "message_delta",
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 1112,
+          "cache_read_input_tokens": 31079,
+          "output_tokens": 231
+        }
+      },
+      {
+        "kind": "usage",
+        "request": 5,
+        "attempt": 1,
+        "event": "result",
+        "usage": {
+          "input_tokens": 2,
+          "cache_creation_input_tokens": 1112,
+          "cache_read_input_tokens": 31079,
+          "output_tokens": 231,
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 1112,
+            "ephemeral_5m_input_tokens": 0
+          }
+        }
+      }
+    ],
+    "incoming": [
+      {
+        "index": 1,
+        "tool_count": 36,
+        "tool_names": null,
+        "context_hashes": {
+          "/system": "7c990deb601562437c4d9f2c8cea66338787f4ef5cd3e3e8fdd40508e7c0287f",
+          "/tools": "855502812f0f1427d8047bb808ee25f4f4c123cd80ced93421a3876d885eecc9"
+        }
+      },
+      {
+        "index": 2,
+        "tool_count": 36,
+        "tool_names": null,
+        "context_hashes": {
+          "/system": "7c990deb601562437c4d9f2c8cea66338787f4ef5cd3e3e8fdd40508e7c0287f",
+          "/tools": "855502812f0f1427d8047bb808ee25f4f4c123cd80ced93421a3876d885eecc9"
+        }
+      },
+      {
+        "index": 3,
+        "tool_count": 36,
+        "tool_names": null,
+        "context_hashes": {
+          "/system": "7c990deb601562437c4d9f2c8cea66338787f4ef5cd3e3e8fdd40508e7c0287f",
+          "/tools": "855502812f0f1427d8047bb808ee25f4f4c123cd80ced93421a3876d885eecc9"
+        }
+      },
+      {
+        "index": 4,
+        "tool_count": 1,
+        "tool_names": [
+          "_infer_title"
+        ],
+        "context_hashes": {
+          "/system": "4a7b177753f028f74e556981d9e700ea0ce574cb9a6fdeed7c20050622ada108",
+          "/tools": "51d284bc5159d8f16609894dd03460fedcfb68de1ba273ac225375a49acf8a36"
+        }
+      },
+      {
+        "index": 5,
+        "tool_count": 36,
+        "tool_names": null,
+        "context_hashes": {
+          "/system": "7c990deb601562437c4d9f2c8cea66338787f4ef5cd3e3e8fdd40508e7c0287f",
+          "/tools": "855502812f0f1427d8047bb808ee25f4f4c123cd80ced93421a3876d885eecc9"
+        }
+      }
+    ],
+    "cleanup_project": "<HOME>/.claude/projects/-var-folders-m4-kmdr4ndn2lv0yxvnlcb6v5gh0000gn-T-clod-cache-measure-cth9j7z8-workdir"
+  }
+]

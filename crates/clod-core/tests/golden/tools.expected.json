@@ -1,0 +1,7 @@
+[
+ {"type":"text","text":"<conversation_history>\nLook"},
+ {"type":"text","text":"\n\n[Assistant: Checking\nPreviously called tool: {\"id\":\"a\",\"name\":\"inspect\",\"input\":{\"path\":\"x\"}}]"},
+ {"type":"text","text":"\n</conversation_history>\n\nThe above is a replay of your prior conversation with this user — the original session could not be resumed. It is context only: do not continue or imitate its transcript format, do not write \"[Assistant: ...]\" markers, and never invent tool output — use your actual tools when action is needed. Respond only as the assistant to the user's message below.\n\nRecorded tool result: {\"tool_use_id\":\"a\",\"is_error\":true}\nfailed"},
+ {"type":"image","source":{"type":"base64","media_type":"image/png","data":"YWJj"}},
+ {"type":"text","text":"Try again"}
+]

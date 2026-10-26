@@ -1,0 +1,7 @@
+[
+ {"type":"text","text":"<conversation_history>\nSee"},
+ {"type":"image","source":{"type":"url","url":"https://example.invalid/image.png"}},
+ {"type":"text","text":"\n\n[Assistant: Seen]"},
+ {"type":"text","text":"\n</conversation_history>\n\nThe above is a replay of your prior conversation with this user — the original session could not be resumed. It is context only: do not continue or imitate its transcript format, do not write \"[Assistant: ...]\" markers, and never invent tool output — use your actual tools when action is needed. Respond only as the assistant to the user's message below.\n\nNow"},
+ {"type":"text","text":"\n\nPlease answer"}
+]

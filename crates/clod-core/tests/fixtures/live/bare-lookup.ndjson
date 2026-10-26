@@ -1,0 +1,12 @@
+{"type":"stream_event","event":{"type":"message_start","message":{"model":"claude-haiku-5-5","type":"message","role":"assistant","content":[]}}}
+{"type":"stream_event","event":{"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_01Qva23KkpYqaUuuEhBRHNgd","name":"lookup","input":{},"caller":{"type":"direct"}}}}
+{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":""}}}
+{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\"key\":"}}}
+{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":" \"alpha"}}}
+{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"\"}"}}}
+{"type":"assistant","session_id":"c7987a7f-87d2-42d9-922c-cba4b9d45eb2","uuid":"e14cdb3d-9e7d-4691-a75d-de11233106ac","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_01Qva23KkpYqaUuuEhBRHNgd","name":"lookup","input":{"key":"alpha"},"caller":{"type":"direct"}}]}}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","content":"<tool_use_error>Error: No such tool available: lookup</tool_use_error>","is_error":true,"tool_use_id":"toolu_01Qva23KkpYqaUuuEhBRHNgd"}]}}
+{"type":"stream_event","event":{"type":"content_block_stop","index":0}}
+{"type":"stream_event","event":{"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null}}}
+{"type":"stream_event","event":{"type":"message_stop"}}
+{"type":"result","session_id":"c7987a7f-87d2-42d9-922c-cba4b9d45eb2","is_error":true,"num_turns":2,"subtype":"error_max_turns","errors":["Reached maximum number of turns (1)"]}

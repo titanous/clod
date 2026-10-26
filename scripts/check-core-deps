@@ -1,0 +1,51 @@
+#!/usr/bin/env -S python3 -I
+"""Check the exact locked non-dev dependency closure of clod-core."""
+import argparse
+import json
+from pathlib import Path
+import subprocess
+import sys
+
+
+def dependency_set(metadata):
+    packages = {package["id"]: package for package in metadata["packages"]}
+    roots = [package["id"] for package in metadata["packages"] if package["name"] == "clod-core"]
+    if len(roots) != 1:
+        raise ValueError("expected exactly one clod-core package")
+    nodes = {node["id"]: node for node in metadata["resolve"]["nodes"]}
+    seen = set()
+    todo = [roots[0]]
+    while todo:
+        current = todo.pop()
+        if current in seen:
+            continue
+        seen.add(current)
+        for dependency in nodes[current]["deps"]:
+            if any(kind["kind"] != "dev" for kind in dependency["dep_kinds"]):
+                todo.append(dependency["pkg"])
+    seen.remove(roots[0])
+    return {packages[item]["name"] + " " + packages[item]["version"] for item in seen}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--metadata", type=Path)
+    args = parser.parse_args()
+    root = Path(__file__).resolve().parent.parent
+    if args.metadata:
+        metadata = json.loads(args.metadata.read_text())
+    else:
+        metadata = json.loads(subprocess.check_output(
+            ["cargo", "metadata", "--locked", "--format-version", "1"], cwd=root))
+    expected = set((root / "crates/clod-core/dependencies.allowlist").read_text().splitlines())
+    actual = dependency_set(metadata)
+    if actual != expected:
+        print("unexpected dependencies: " + repr(sorted(actual - expected)), file=sys.stderr)
+        print("missing dependencies: " + repr(sorted(expected - actual)), file=sys.stderr)
+        return 1
+    print("clod-core dependency allowlist matches (" + str(len(actual)) + " crates)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,5 @@
+{"synthetic":true,"source":"Derived from meridian/src/__tests__/proxy-passthrough-thinking.test.ts thinkingBlockStart/thinkingDelta and Anthropic signature_delta shape; not a live capture","dir":"out","line":{"type":"stream_event","event":{"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":""}}}}
+{"synthetic":true,"dir":"out","line":{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"A summary"}}}}
+{"synthetic":true,"dir":"out","line":{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"signed-data"}}}}
+{"synthetic":true,"dir":"out","line":{"type":"stream_event","event":{"type":"content_block_stop","index":0}}}
+{"synthetic":true,"dir":"out","line":{"type":"stream_event","event":{"type":"content_block_start","index":1,"content_block":{"type":"redacted_thinking","data":"redacted_data_xyz"}}}}

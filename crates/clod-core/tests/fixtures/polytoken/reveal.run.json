@@ -1,0 +1,38 @@
+{
+  "version": "polytoken 0.9.2",
+  "scenario": "reveal",
+  "provider_url": "http://127.0.0.1:<MOCK_PORT>",
+  "requests": 4,
+  "logs": [
+    {
+      "command": [
+        "~/.local/bin/polytoken",
+        "--config-dir",
+        "<RUN>/config/polytoken",
+        "--working-dir",
+        "<RUN>/work",
+        "new",
+        "--no-attach"
+      ],
+      "returncode": 0,
+      "stdout": "session_id=<DAEMON_SESSION> port=60487\n",
+      "stderr": ""
+    },
+    {
+      "prompt": "Read hello.txt and report what it says.",
+      "accepted": {
+        "prompt_id": "01a17966-873d-76e3-bb97-9a5e3364044c",
+        "session_id": "<DAEMON_SESSION>"
+      },
+      "latest_assistant_text": "The fixture says hello from the harness."
+    },
+    {
+      "prompt": "This is the second top-level prompt. Reply briefly.",
+      "accepted": {
+        "prompt_id": "01a17966-88f4-7ac2-8a7e-efee8cab8fe5",
+        "session_id": "<DAEMON_SESSION>"
+      },
+      "latest_assistant_text": "Second top-level prompt complete."
+    }
+  ]
+}

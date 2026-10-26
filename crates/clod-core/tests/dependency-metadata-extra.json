@@ -1,0 +1,4 @@
+{
+ "packages":[{"id":"core","name":"clod-core","version":"0.1.0"},{"id":"extra","name":"unreviewed-io","version":"1.0.0"}],
+ "resolve":{"nodes":[{"id":"core","deps":[{"pkg":"extra","dep_kinds":[{"kind":null,"target":null}]}]},{"id":"extra","deps":[]}]}
+}

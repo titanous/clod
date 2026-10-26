@@ -1,0 +1,9 @@
+{
+  "evidence": "Reconstructed pre-fix assistant from captured streamed block and completed JSON input; caller is captured, not hypothetical.",
+  "first_different_byte": 14,
+  "prior": "{\"content\":[{\"caller\":{\"type\":\"direct\"},\"id\":\"toolu_01VhuGKDYPGx3cbrX83yUMvp\",\"input\":{\"path\":\"hello.txt\"},\"name\":\"file_read\",\"type\":\"tool_use\"}],\"role\":\"assistant\"}",
+  "echoed": "{\"content\":[{\"id\":\"toolu_01VhuGKDYPGx3cbrX83yUMvp\",\"input\":{\"path\":\"hello.txt\"},\"name\":\"file_read\",\"type\":\"tool_use\"}],\"role\":\"assistant\"}",
+  "extra_bytes": "\"caller\":{\"type\":\"direct\"},",
+  "prior_length": 165,
+  "echoed_length": 138
+}

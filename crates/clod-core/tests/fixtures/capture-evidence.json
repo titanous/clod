@@ -1,0 +1,2662 @@
+[
+  {
+    "name": "a-text",
+    "argv": [
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--input-format",
+      "stream-json",
+      "--max-turns",
+      "1",
+      "--model",
+      "haiku",
+      "--allowedTools",
+      "mcp__oc__lookup,mcp__oc__combine",
+      "--tools",
+      "--setting-sources=",
+      "--strict-mcp-config",
+      "--permission-mode",
+      "bypassPermissions",
+      "--allow-dangerously-skip-permissions",
+      "--include-partial-messages"
+    ],
+    "timing": [
+      {
+        "t_ms": 724,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "48f91d2f-aa0b-47e0-b4ed-0ca3d942119b",
+        "session_id": "48b8ae0c-35cd-4194-bbe7-4f73bd58067f"
+      },
+      {
+        "t_ms": 725,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "3c637119-962d-4062-bfb9-38f781ea1fdd",
+        "session_id": "48b8ae0c-35cd-4194-bbe7-4f73bd58067f"
+      },
+      {
+        "t_ms": 1353,
+        "kind": "sdk",
+        "type": "rate_limit_event",
+        "uuid": "bb372c97-78a6-409c-8040-7b787d57f01e",
+        "session_id": "48b8ae0c-35cd-4194-bbe7-4f73bd58067f"
+      },
+      {
+        "t_ms": 1571,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_start",
+        "uuid": "63cc80ae-6107-4ec3-b75f-d2ff4d926d08",
+        "session_id": "48b8ae0c-35cd-4194-bbe7-4f73bd58067f"
+      },
+      {
+        "t_ms": 1571,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_start",
+        "uuid": "a4864801-2fba-4075-bb8c-dc6a95c8455e",
+        "session_id": "48b8ae0c-35cd-4194-bbe7-4f73bd58067f"
+      },
+      {
+        "t_ms": 1571,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "7928f6fa-2045-4c46-9222-2e84d80e7558",
+        "session_id": "48b8ae0c-35cd-4194-bbe7-4f73bd58067f"
+      },
+      {
+        "t_ms": 1881,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "3cda20aa-05e4-48ea-b535-ac9dfb62a28f",
+        "session_id": "48b8ae0c-35cd-4194-bbe7-4f73bd58067f"
+      },
+      {
+        "t_ms": 1882,
+        "kind": "sdk",
+        "type": "assistant",
+        "uuid": "c6cf664e-de16-4bfc-80a6-2024db6bf284",
+        "session_id": "48b8ae0c-35cd-4194-bbe7-4f73bd58067f"
+      },
+      {
+        "t_ms": 1882,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_stop",
+        "uuid": "d6f763a7-ea0a-4f55-a2e4-fa8db3479ef2",
+        "session_id": "48b8ae0c-35cd-4194-bbe7-4f73bd58067f"
+      },
+      {
+        "t_ms": 1883,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_delta",
+        "uuid": "9078ac5b-ea96-4bd7-af9c-f52984aedf57",
+        "session_id": "48b8ae0c-35cd-4194-bbe7-4f73bd58067f"
+      },
+      {
+        "t_ms": 1883,
+        "kind": "release",
+        "reason": "message_delta",
+        "count": 0
+      },
+      {
+        "t_ms": 1883,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_stop",
+        "uuid": "023cc6e3-b793-430f-9bea-82d354996656",
+        "session_id": "48b8ae0c-35cd-4194-bbe7-4f73bd58067f"
+      },
+      {
+        "t_ms": 1883,
+        "kind": "release",
+        "reason": "message_stop",
+        "count": 0
+      },
+      {
+        "t_ms": 1888,
+        "kind": "sdk",
+        "type": "result",
+        "uuid": "25e19b0a-b8e0-4eff-9397-9516e581b6f1",
+        "session_id": "48b8ae0c-35cd-4194-bbe7-4f73bd58067f"
+      },
+      {
+        "t_ms": 2277,
+        "kind": "release",
+        "reason": "finally",
+        "count": 0
+      }
+    ],
+    "assistant": [
+      {
+        "uuid": "c6cf664e-de16-4bfc-80a6-2024db6bf284",
+        "session_id": "48b8ae0c-35cd-4194-bbe7-4f73bd58067f",
+        "content": [
+          {
+            "type": "text",
+            "text": "OK"
+          }
+        ]
+      }
+    ],
+    "result": {
+      "subtype": "success",
+      "session_id": "48b8ae0c-35cd-4194-bbe7-4f73bd58067f",
+      "cache_read_input_tokens": 0
+    },
+    "stderrRows": 0
+  },
+  {
+    "name": "a-text-resume",
+    "argv": [
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--input-format",
+      "stream-json",
+      "--max-turns",
+      "1",
+      "--model",
+      "haiku",
+      "--resume",
+      "48b8ae0c-35cd-4194-bbe7-4f73bd58067f",
+      "--allowedTools",
+      "mcp__oc__lookup,mcp__oc__combine",
+      "--tools",
+      "--setting-sources=",
+      "--strict-mcp-config",
+      "--permission-mode",
+      "bypassPermissions",
+      "--allow-dangerously-skip-permissions",
+      "--include-partial-messages",
+      "--fork-session",
+      "--resume-session-at",
+      "c6cf664e-de16-4bfc-80a6-2024db6bf284"
+    ],
+    "timing": [
+      {
+        "t_ms": 502,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "3836da9e-8303-44ff-ac77-283aa87b5424",
+        "session_id": "a4109a67-f1c0-4771-ab17-478e3fb64ce3"
+      },
+      {
+        "t_ms": 503,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "f405bede-1c35-4fd0-9ede-62b802de6642",
+        "session_id": "a4109a67-f1c0-4771-ab17-478e3fb64ce3"
+      },
+      {
+        "t_ms": 3126,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_start",
+        "uuid": "6780e629-d479-48fe-b1e8-35806bfae6ad",
+        "session_id": "a4109a67-f1c0-4771-ab17-478e3fb64ce3"
+      },
+      {
+        "t_ms": 3127,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_start",
+        "uuid": "a7bc7f06-1580-4b9b-85bf-9967dc53d1e9",
+        "session_id": "a4109a67-f1c0-4771-ab17-478e3fb64ce3"
+      },
+      {
+        "t_ms": 3127,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "c01b8001-d979-4916-afe0-3286a89812e8",
+        "session_id": "a4109a67-f1c0-4771-ab17-478e3fb64ce3"
+      },
+      {
+        "t_ms": 3128,
+        "kind": "sdk",
+        "type": "assistant",
+        "uuid": "029cb595-6258-4268-ad50-67d9486780f6",
+        "session_id": "a4109a67-f1c0-4771-ab17-478e3fb64ce3"
+      },
+      {
+        "t_ms": 3128,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_stop",
+        "uuid": "aea4b805-4148-42fd-9b0a-dc36f0f0487f",
+        "session_id": "a4109a67-f1c0-4771-ab17-478e3fb64ce3"
+      },
+      {
+        "t_ms": 3135,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_delta",
+        "uuid": "6a1f9476-0539-4efd-b4d5-f1bebdc8a849",
+        "session_id": "a4109a67-f1c0-4771-ab17-478e3fb64ce3"
+      },
+      {
+        "t_ms": 3135,
+        "kind": "release",
+        "reason": "message_delta",
+        "count": 0
+      },
+      {
+        "t_ms": 3135,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_stop",
+        "uuid": "391d587c-5279-415b-bc18-3adb38e04333",
+        "session_id": "a4109a67-f1c0-4771-ab17-478e3fb64ce3"
+      },
+      {
+        "t_ms": 3135,
+        "kind": "release",
+        "reason": "message_stop",
+        "count": 0
+      },
+      {
+        "t_ms": 3136,
+        "kind": "sdk",
+        "type": "rate_limit_event",
+        "uuid": "8203fb18-c61c-40b5-8069-44b271aa0410",
+        "session_id": "a4109a67-f1c0-4771-ab17-478e3fb64ce3"
+      },
+      {
+        "t_ms": 3141,
+        "kind": "sdk",
+        "type": "result",
+        "uuid": "d1e9e9e2-077e-47f4-bb84-bb32f327e478",
+        "session_id": "a4109a67-f1c0-4771-ab17-478e3fb64ce3"
+      },
+      {
+        "t_ms": 3507,
+        "kind": "release",
+        "reason": "finally",
+        "count": 0
+      }
+    ],
+    "assistant": [
+      {
+        "uuid": "029cb595-6258-4268-ad50-67d9486780f6",
+        "session_id": "a4109a67-f1c0-4771-ab17-478e3fb64ce3",
+        "content": [
+          {
+            "type": "text",
+            "text": "cobalt"
+          }
+        ]
+      }
+    ],
+    "result": {
+      "subtype": "success",
+      "session_id": "a4109a67-f1c0-4771-ab17-478e3fb64ce3",
+      "cache_read_input_tokens": 752
+    },
+    "stderrRows": 0
+  },
+  {
+    "name": "b-tool",
+    "argv": [
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--input-format",
+      "stream-json",
+      "--max-turns",
+      "1",
+      "--model",
+      "haiku",
+      "--allowedTools",
+      "mcp__oc__lookup,mcp__oc__combine",
+      "--tools",
+      "--setting-sources=",
+      "--strict-mcp-config",
+      "--permission-mode",
+      "bypassPermissions",
+      "--allow-dangerously-skip-permissions",
+      "--include-partial-messages"
+    ],
+    "timing": [
+      {
+        "t_ms": 478,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "030d6494-e197-4997-9a08-a8f02774d541",
+        "session_id": "b5178a9a-0f15-4be8-80dc-d6be354cf971"
+      },
+      {
+        "t_ms": 480,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "a3fcbcc0-9ff3-41fa-83cc-09f60e917a66",
+        "session_id": "b5178a9a-0f15-4be8-80dc-d6be354cf971"
+      },
+      {
+        "t_ms": 1048,
+        "kind": "sdk",
+        "type": "rate_limit_event",
+        "uuid": "bf21f786-1ccf-4d7c-9b2c-008eb02b4068",
+        "session_id": "b5178a9a-0f15-4be8-80dc-d6be354cf971"
+      },
+      {
+        "t_ms": 1258,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_start",
+        "uuid": "f325af40-9ff8-4443-ac45-ffeef7be744d",
+        "session_id": "b5178a9a-0f15-4be8-80dc-d6be354cf971"
+      },
+      {
+        "t_ms": 1258,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_start",
+        "uuid": "95b0d312-c2e8-482f-a5d2-9d9ecaa0dff1",
+        "session_id": "b5178a9a-0f15-4be8-80dc-d6be354cf971"
+      },
+      {
+        "t_ms": 1258,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "75afd398-1e4b-4afb-9138-1c5fcf955591",
+        "session_id": "b5178a9a-0f15-4be8-80dc-d6be354cf971"
+      },
+      {
+        "t_ms": 1467,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "066b2ac8-6ad6-4c40-b547-3bec530e453c",
+        "session_id": "b5178a9a-0f15-4be8-80dc-d6be354cf971"
+      },
+      {
+        "t_ms": 1467,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "d73cdc8c-f8f7-4977-a8d1-f66008960778",
+        "session_id": "b5178a9a-0f15-4be8-80dc-d6be354cf971"
+      },
+      {
+        "t_ms": 1469,
+        "kind": "sdk",
+        "type": "assistant",
+        "uuid": "1c8b81e5-2923-4ca0-9673-02e0b9d7eb83",
+        "session_id": "b5178a9a-0f15-4be8-80dc-d6be354cf971"
+      },
+      {
+        "t_ms": 1472,
+        "kind": "hook_enter",
+        "tool": "mcp__oc__lookup",
+        "generating": true
+      },
+      {
+        "t_ms": 1473,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_stop",
+        "uuid": "d288f566-d70d-44ca-92f0-acac2054dd45",
+        "session_id": "b5178a9a-0f15-4be8-80dc-d6be354cf971"
+      },
+      {
+        "t_ms": 1477,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_delta",
+        "uuid": "40e4089d-357c-4017-94d1-fab439e8a193",
+        "session_id": "b5178a9a-0f15-4be8-80dc-d6be354cf971"
+      },
+      {
+        "t_ms": 1477,
+        "kind": "release",
+        "reason": "message_delta",
+        "count": 1
+      },
+      {
+        "t_ms": 1478,
+        "kind": "hook_answer",
+        "tool": "mcp__oc__lookup"
+      },
+      {
+        "t_ms": 1478,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_stop",
+        "uuid": "b568615e-d4a2-4745-aa4b-02038c699d50",
+        "session_id": "b5178a9a-0f15-4be8-80dc-d6be354cf971"
+      },
+      {
+        "t_ms": 1478,
+        "kind": "release",
+        "reason": "message_stop",
+        "count": 0
+      },
+      {
+        "t_ms": 1484,
+        "kind": "sdk",
+        "type": "user",
+        "uuid": "4a2a0f71-5ed8-40a5-9494-47e31f353767",
+        "session_id": "b5178a9a-0f15-4be8-80dc-d6be354cf971"
+      },
+      {
+        "t_ms": 1487,
+        "kind": "sdk",
+        "type": "result",
+        "uuid": "5c4ab385-b5c9-4d9f-a894-f2e2df606ef0",
+        "session_id": "b5178a9a-0f15-4be8-80dc-d6be354cf971"
+      },
+      {
+        "t_ms": 1968,
+        "kind": "exception",
+        "message": "Claude Code returned an error result: Reached maximum number of turns (1)"
+      },
+      {
+        "t_ms": 1968,
+        "kind": "release",
+        "reason": "finally",
+        "count": 0
+      }
+    ],
+    "assistant": [
+      {
+        "uuid": "1c8b81e5-2923-4ca0-9673-02e0b9d7eb83",
+        "session_id": "b5178a9a-0f15-4be8-80dc-d6be354cf971",
+        "content": [
+          {
+            "type": "tool_use",
+            "id": "toolu_01NzL65YqbrCWWV2yqT5cpB8",
+            "name": "mcp__oc__lookup",
+            "input": {
+              "key": "alpha"
+            },
+            "caller": {
+              "type": "direct"
+            }
+          }
+        ]
+      }
+    ],
+    "result": {
+      "subtype": "error_max_turns",
+      "session_id": "b5178a9a-0f15-4be8-80dc-d6be354cf971",
+      "errors": [
+        "Reached maximum number of turns (1)"
+      ],
+      "cache_read_input_tokens": 0
+    },
+    "stderrRows": 0
+  },
+  {
+    "name": "b-tool-resume",
+    "argv": [
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--input-format",
+      "stream-json",
+      "--max-turns",
+      "1",
+      "--model",
+      "haiku",
+      "--resume",
+      "b5178a9a-0f15-4be8-80dc-d6be354cf971",
+      "--allowedTools",
+      "mcp__oc__lookup,mcp__oc__combine",
+      "--tools",
+      "--setting-sources=",
+      "--strict-mcp-config",
+      "--permission-mode",
+      "bypassPermissions",
+      "--allow-dangerously-skip-permissions",
+      "--include-partial-messages",
+      "--fork-session",
+      "--resume-session-at",
+      "1c8b81e5-2923-4ca0-9673-02e0b9d7eb83"
+    ],
+    "timing": [
+      {
+        "t_ms": 558,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "3b99fa6d-b5f4-465c-b17a-a43fb495547e",
+        "session_id": "c5affea8-4687-466b-8ab1-2b6935d837cc"
+      },
+      {
+        "t_ms": 560,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "67c27980-78ac-4bdc-8727-14e4f8ea36e0",
+        "session_id": "c5affea8-4687-466b-8ab1-2b6935d837cc"
+      },
+      {
+        "t_ms": 1024,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_start",
+        "uuid": "f17d59f7-349f-4a54-b52c-dfd3444ba9dc",
+        "session_id": "c5affea8-4687-466b-8ab1-2b6935d837cc"
+      },
+      {
+        "t_ms": 1024,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_start",
+        "uuid": "29328c76-0dfe-41b5-8dcb-ac0bdb950708",
+        "session_id": "c5affea8-4687-466b-8ab1-2b6935d837cc"
+      },
+      {
+        "t_ms": 1024,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "4086772f-f0ae-4b3d-8553-287f5396dbdb",
+        "session_id": "c5affea8-4687-466b-8ab1-2b6935d837cc"
+      },
+      {
+        "t_ms": 1073,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "7d7094c1-9a81-4bbe-815c-336fe3632a19",
+        "session_id": "c5affea8-4687-466b-8ab1-2b6935d837cc"
+      },
+      {
+        "t_ms": 1074,
+        "kind": "sdk",
+        "type": "assistant",
+        "uuid": "191f1073-20b0-48dc-bb29-fb0d7d61c383",
+        "session_id": "c5affea8-4687-466b-8ab1-2b6935d837cc"
+      },
+      {
+        "t_ms": 1074,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_stop",
+        "uuid": "8f63021c-da50-40c4-a2b1-f84f2bd4b50b",
+        "session_id": "c5affea8-4687-466b-8ab1-2b6935d837cc"
+      },
+      {
+        "t_ms": 1094,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_delta",
+        "uuid": "3035f573-dada-4816-8938-5a4ab3aeda18",
+        "session_id": "c5affea8-4687-466b-8ab1-2b6935d837cc"
+      },
+      {
+        "t_ms": 1094,
+        "kind": "release",
+        "reason": "message_delta",
+        "count": 0
+      },
+      {
+        "t_ms": 1094,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_stop",
+        "uuid": "f4afc6d5-1819-4398-bd59-17fe5b216f59",
+        "session_id": "c5affea8-4687-466b-8ab1-2b6935d837cc"
+      },
+      {
+        "t_ms": 1094,
+        "kind": "release",
+        "reason": "message_stop",
+        "count": 0
+      },
+      {
+        "t_ms": 1095,
+        "kind": "sdk",
+        "type": "rate_limit_event",
+        "uuid": "80c9e8df-4b5f-4697-a36a-8babeeb49f64",
+        "session_id": "c5affea8-4687-466b-8ab1-2b6935d837cc"
+      },
+      {
+        "t_ms": 1099,
+        "kind": "sdk",
+        "type": "result",
+        "uuid": "c953dda8-305d-44fb-9ab8-fb497f4f5727",
+        "session_id": "c5affea8-4687-466b-8ab1-2b6935d837cc"
+      },
+      {
+        "t_ms": 1533,
+        "kind": "release",
+        "reason": "finally",
+        "count": 0
+      }
+    ],
+    "assistant": [
+      {
+        "uuid": "191f1073-20b0-48dc-bb29-fb0d7d61c383",
+        "session_id": "c5affea8-4687-466b-8ab1-2b6935d837cc",
+        "content": [
+          {
+            "type": "text",
+            "text": "VALUE_alpha"
+          }
+        ]
+      }
+    ],
+    "result": {
+      "subtype": "success",
+      "session_id": "c5affea8-4687-466b-8ab1-2b6935d837cc",
+      "cache_read_input_tokens": 1072
+    },
+    "stderrRows": 0
+  },
+  {
+    "name": "c-final",
+    "argv": [
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--input-format",
+      "stream-json",
+      "--max-turns",
+      "1",
+      "--model",
+      "haiku",
+      "--resume",
+      "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8",
+      "--allowedTools",
+      "mcp__oc__lookup,mcp__oc__combine",
+      "--tools",
+      "--setting-sources=",
+      "--strict-mcp-config",
+      "--permission-mode",
+      "bypassPermissions",
+      "--allow-dangerously-skip-permissions",
+      "--include-partial-messages",
+      "--fork-session",
+      "--resume-session-at",
+      "1f71bb6b-d042-4b16-9893-986589978743"
+    ],
+    "timing": [
+      {
+        "t_ms": 435,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "0832d37e-5140-442e-893c-7e63ecae99df",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 437,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "a9609ac6-40cb-429a-8f16-c5d7322b6df8",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1581,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_start",
+        "uuid": "442ccca1-2d69-42b8-aedc-00396a5493d4",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1581,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_start",
+        "uuid": "9ea47a76-cf19-4486-9b71-73d531992781",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1758,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "d6c24033-ab6e-4542-909c-0a32b30298fb",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1758,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "9c7a9058-49b7-47eb-8f96-9715f474b088",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1839,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "650717e0-4eb3-4ba6-a2cc-8c37da688f49",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1839,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "1c4bbe14-7aee-45d1-9b8c-8e19de263ca6",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1839,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "ef7485f2-6646-4949-b12f-9d81249014de",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1840,
+        "kind": "sdk",
+        "type": "assistant",
+        "uuid": "9f4152d7-7a63-43a4-b221-3cc2016068cb",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1840,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_stop",
+        "uuid": "6f3cea36-4548-479c-9d0b-3c951ee442a2",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1840,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_start",
+        "uuid": "7fad6e31-4cb5-4979-9fe7-ee9e724d6cf2",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1841,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "72886ced-50a7-42a4-9dd2-c849562be8f5",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1865,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "4459c982-e9e3-4a81-adf2-f502b07bee89",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1881,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "855b4585-aef1-431c-a1a3-7f7b548d76e9",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1901,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "c700d39b-71ee-4c0f-9f36-94bb62088eeb",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1921,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "54a6259f-5a74-477f-9546-39b3ebb23eac",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1941,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "bc7cfbe6-dc03-4fbd-9300-ce50a9a64eb5",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1964,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "231c750b-30a9-4127-a166-91f9d26c3378",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 1983,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "112ef092-825c-4a0c-bd5c-164ed04367bb",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 2004,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "e4f72b65-25d7-462e-844e-b802cd455f76",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 2023,
+        "kind": "sdk",
+        "type": "assistant",
+        "uuid": "5c96e5dc-a9fe-4ac9-85fe-3ebb7077205f",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 2023,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_stop",
+        "uuid": "2a73068a-444d-4942-9ec3-075bbb80b6f3",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 2042,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_delta",
+        "uuid": "30fdabf2-c3eb-4a8a-b725-696c712b7580",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 2042,
+        "kind": "release",
+        "reason": "message_delta",
+        "count": 0
+      },
+      {
+        "t_ms": 2042,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_stop",
+        "uuid": "7296a5df-dc47-4312-8486-2872e0024fdd",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 2042,
+        "kind": "release",
+        "reason": "message_stop",
+        "count": 0
+      },
+      {
+        "t_ms": 2042,
+        "kind": "sdk",
+        "type": "rate_limit_event",
+        "uuid": "168a79d9-720d-4ac3-badc-7bb488356506",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 2046,
+        "kind": "sdk",
+        "type": "result",
+        "uuid": "8841c639-6dc4-45ac-8f41-a433ac299e87",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc"
+      },
+      {
+        "t_ms": 2547,
+        "kind": "release",
+        "reason": "finally",
+        "count": 0
+      }
+    ],
+    "assistant": [
+      {
+        "uuid": "9f4152d7-7a63-43a4-b221-3cc2016068cb",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc",
+        "content": [
+          {
+            "type": "thinking",
+            "thinking": "",
+            "signature": "CAQS1AYKEAgTGAI4AUIIdGhpbmtpbmcSDM/BdKngE8/aPgr5ChoMDUkRzSiyQG1EdajQIjCe2cXsCIy6ZMVvQodpeDc5ppjAEHrgNFwNl8e2vQfffzxj5lm34Q8j4qu4GPMfPz8q8QXthePQ0F/v086/9sWJuyYGTa4VH69MzRnyWXm5QzjjTOMDgF9dOdMjE/Gk6gMISeeG5TjsdVFfHSEnFdX2eWPtkHjZfEOto5yjUCXiBzSa/+fbt2F+5ykVCOX6LshZabChf8UzustitOVKoHMWQT23ruMdNtGKotB0f1YTPa6JTwZraWRjrYbPnLj4Ac+H5qBE3U1qlUI/QdfHn+BDXUnP1z8Ffif+8o/Nx0DCjSL1sHwwkC9Ao8BjdiQGT4g03SckFPNaQjLnWW74IyvtJ4si/b1MPnQhhfZI/UYwlF7777qSZBhLoOrDenM8nV/MMyITLlmw9XXyEUvhnZW1pYj2B43vDR0n2LjnazCTVg6VpfiIEfDrX1NuB17oHMysU9eb+vDQBBsqXKyEdIHXHJOhqt3shHoDiwyzSuylLnW9P6NIyRJbTS62eUWjxuFKbowUZFF/eHFbDWr0tlv/4saky8iyguPQlhuya6JQGCjerNdntb+ba24ITNlRe3NVGMUBY8f3MdTuGkBCVyvwJ6JDWUUc0Q7Go4Wnx6zOCe9ciLsi8CwYES3cmiZG9b+8oEZNJJIuaMImlntk7nrwizXtTYkj+MDbzUCxzzmoQkl6akEmftl/K3I/l3EkxCsyPQw+iOAce7O5vicMI0g03HehDXQeAvCrMhXZKfVsc1D6sBf+du6Z6W+RFCQoyeTeKuXJjrRP7Qb41CSC2dd+DZkiMaAgpBQW6S8Gsqvty6ynZVuEPnjJdnNlKUWUi7DsU660d3WR3bQh9GO3F8RQRoFa7dYL1Ssrs+6Q5vOnm4qJ5px4BsReiLmV6poH4akNkcUT1DTcjZg0gr1JsntWZoBMutFdZAIBwkvFOq7m9UbRoDOloj3u29uVx3RF+0qBTD/zsEe0dYc8bjxulixDyZo4PNCU36fFp2afXsIazDxCE1ATK6SepaeR4WPDethqTAR5D2jlmTmuoZ+Du1Xk64Pv7doqYCMRNFAISL/Q7h9cRdcYAQ=="
+          }
+        ]
+      },
+      {
+        "uuid": "5c96e5dc-a9fe-4ac9-85fe-3ebb7077205f",
+        "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc",
+        "content": [
+          {
+            "type": "text",
+            "text": "- alpha: VALUE_alpha\n- beta: VALUE_beta\n- gamma: VALUE_gamma\n- Combined result: VALUE_COMBINED"
+          }
+        ]
+      }
+    ],
+    "result": {
+      "subtype": "success",
+      "session_id": "36ede346-28b4-4a6b-96e0-271c2d42b4dc",
+      "cache_read_input_tokens": 1399
+    },
+    "stderrRows": 0
+  },
+  {
+    "name": "c-parallel",
+    "argv": [
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--input-format",
+      "stream-json",
+      "--max-turns",
+      "1",
+      "--model",
+      "haiku",
+      "--allowedTools",
+      "mcp__oc__lookup,mcp__oc__combine",
+      "--tools",
+      "--setting-sources=",
+      "--strict-mcp-config",
+      "--permission-mode",
+      "bypassPermissions",
+      "--allow-dangerously-skip-permissions",
+      "--include-partial-messages"
+    ],
+    "timing": [
+      {
+        "t_ms": 525,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "375d2f91-0ea1-4393-8865-499f7571a83a",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 527,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "d15479d7-8e0c-4309-930b-22a442bc94d4",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 1878,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_start",
+        "uuid": "044bb83d-2a35-46f5-bc36-ba3edcd67418",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 1878,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_start",
+        "uuid": "27a73ecf-48c6-485d-824a-8bc58f38b289",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 1878,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "d586abd6-2eab-4061-8c2a-44d1ce5c57f6",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2031,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "4b90f87f-c41e-4471-8dde-03d9f8494d8a",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2031,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "8b9f7203-1e88-49a6-894b-9dfd236c0b54",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2033,
+        "kind": "sdk",
+        "type": "assistant",
+        "uuid": "b8a3c68e-6fc2-4052-a3e0-dbb378b6bcde",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2035,
+        "kind": "hook_enter",
+        "tool": "mcp__oc__lookup",
+        "generating": true
+      },
+      {
+        "t_ms": 2036,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_stop",
+        "uuid": "2351062d-b0bf-4c17-bc30-c0e64497017d",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2036,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_start",
+        "uuid": "9dc2f51e-0e24-417b-bedb-e5ade61b1968",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2036,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "f6c765d5-dde2-49a4-a88a-88c80a1da927",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2041,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "ed70045d-83f5-425a-bcf2-fa54da8f624c",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2064,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "56f783d4-6f40-48e0-a205-89e814d2a7fb",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2090,
+        "kind": "sdk",
+        "type": "rate_limit_event",
+        "uuid": "70b9a8df-3b1b-477e-93c4-c1b9699413dc",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2356,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "523b4a9e-94cc-4d08-b8b7-d9a23d157177",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2356,
+        "kind": "sdk",
+        "type": "assistant",
+        "uuid": "d6592907-a178-4aa2-ac63-ab5d90562b50",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2356,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_stop",
+        "uuid": "37e5f96e-29e8-45ef-979e-041c09ae45bf",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2356,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_start",
+        "uuid": "4ab17dcc-6545-4880-8765-64d4f438f38a",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2356,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "650499b1-dbf9-4289-b87d-bb2890ae11f9",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2356,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "afc831cf-13da-4750-88a0-f67f7c417676",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2356,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "d0c59871-b11c-4480-bf3e-ca9a0783b67c",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2357,
+        "kind": "sdk",
+        "type": "assistant",
+        "uuid": "9dc94eb5-bf15-41dd-be62-f1bfe7849773",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2357,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_stop",
+        "uuid": "9649b208-a131-4dc4-8233-b74c6d458629",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2370,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_delta",
+        "uuid": "5a10b2ed-b057-4b21-a1d8-87fd5d2f3b0a",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2370,
+        "kind": "release",
+        "reason": "message_delta",
+        "count": 1
+      },
+      {
+        "t_ms": 2370,
+        "kind": "hook_answer",
+        "tool": "mcp__oc__lookup"
+      },
+      {
+        "t_ms": 2370,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_stop",
+        "uuid": "7e5607f6-b7e2-4fe0-a974-02cd12332b87",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2370,
+        "kind": "release",
+        "reason": "message_stop",
+        "count": 0
+      },
+      {
+        "t_ms": 2376,
+        "kind": "hook_enter",
+        "tool": "mcp__oc__lookup",
+        "generating": false
+      },
+      {
+        "t_ms": 2376,
+        "kind": "hook_answer",
+        "tool": "mcp__oc__lookup"
+      },
+      {
+        "t_ms": 2376,
+        "kind": "sdk",
+        "type": "user",
+        "uuid": "b8a02f42-80d2-4db2-a73e-e054ad9dee4a",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2378,
+        "kind": "hook_enter",
+        "tool": "mcp__oc__lookup",
+        "generating": false
+      },
+      {
+        "t_ms": 2378,
+        "kind": "hook_answer",
+        "tool": "mcp__oc__lookup"
+      },
+      {
+        "t_ms": 2378,
+        "kind": "sdk",
+        "type": "user",
+        "uuid": "d82de1ec-a6c1-4598-9a2d-95042a06f295",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2380,
+        "kind": "sdk",
+        "type": "user",
+        "uuid": "948616cf-4a74-45b5-9111-8e31eb4decb9",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2382,
+        "kind": "sdk",
+        "type": "result",
+        "uuid": "66b959a6-2147-45e9-8482-352459820de6",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735"
+      },
+      {
+        "t_ms": 2703,
+        "kind": "exception",
+        "message": "Claude Code returned an error result: Reached maximum number of turns (1)"
+      },
+      {
+        "t_ms": 2703,
+        "kind": "release",
+        "reason": "finally",
+        "count": 0
+      }
+    ],
+    "assistant": [
+      {
+        "uuid": "b8a3c68e-6fc2-4052-a3e0-dbb378b6bcde",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735",
+        "content": [
+          {
+            "type": "tool_use",
+            "id": "toolu_01BRJAhTauMdrCHmQVAgHZmV",
+            "name": "mcp__oc__lookup",
+            "input": {
+              "key": "alpha"
+            },
+            "caller": {
+              "type": "direct"
+            }
+          }
+        ]
+      },
+      {
+        "uuid": "d6592907-a178-4aa2-ac63-ab5d90562b50",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735",
+        "content": [
+          {
+            "type": "tool_use",
+            "id": "toolu_01TydpXCuqmBogKxbqsJP8WD",
+            "name": "mcp__oc__lookup",
+            "input": {
+              "key": "beta"
+            },
+            "caller": {
+              "type": "direct"
+            }
+          }
+        ]
+      },
+      {
+        "uuid": "9dc94eb5-bf15-41dd-be62-f1bfe7849773",
+        "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735",
+        "content": [
+          {
+            "type": "tool_use",
+            "id": "toolu_01NAyYsAudoA5Gdf1DQARGwj",
+            "name": "mcp__oc__lookup",
+            "input": {
+              "key": "gamma"
+            },
+            "caller": {
+              "type": "direct"
+            }
+          }
+        ]
+      }
+    ],
+    "result": {
+      "subtype": "error_max_turns",
+      "session_id": "bb8f6646-3808-457f-a403-b3f272ee1735",
+      "errors": [
+        "Reached maximum number of turns (1)"
+      ],
+      "cache_read_input_tokens": 0
+    },
+    "stderrRows": 0
+  },
+  {
+    "name": "c-second-round",
+    "argv": [
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--input-format",
+      "stream-json",
+      "--max-turns",
+      "1",
+      "--model",
+      "haiku",
+      "--resume",
+      "bb8f6646-3808-457f-a403-b3f272ee1735",
+      "--allowedTools",
+      "mcp__oc__lookup,mcp__oc__combine",
+      "--tools",
+      "--setting-sources=",
+      "--strict-mcp-config",
+      "--permission-mode",
+      "bypassPermissions",
+      "--allow-dangerously-skip-permissions",
+      "--include-partial-messages",
+      "--fork-session",
+      "--resume-session-at",
+      "9dc94eb5-bf15-41dd-be62-f1bfe7849773"
+    ],
+    "timing": [
+      {
+        "t_ms": 411,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "d08c17b3-a536-4d89-8cfd-d75aaaa3e720",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8"
+      },
+      {
+        "t_ms": 413,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "74496b5e-11e4-463d-9160-eed530d47b00",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8"
+      },
+      {
+        "t_ms": 2488,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_start",
+        "uuid": "af7be4a7-847f-4640-b3ef-7a07c8a031a2",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8"
+      },
+      {
+        "t_ms": 2488,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_start",
+        "uuid": "bebda85f-040f-4949-a2ee-8dbdc24bf022",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8"
+      },
+      {
+        "t_ms": 2488,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "a89ac5b5-f315-429f-851b-98e35c605a03",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8"
+      },
+      {
+        "t_ms": 2519,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "fcebcd0a-46a9-484b-b8d4-e6e12d410c9a",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8"
+      },
+      {
+        "t_ms": 2572,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "09f5c388-57fe-4f5f-99e4-3961c4599543",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8"
+      },
+      {
+        "t_ms": 2572,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "1710af1b-a479-4957-84f2-a1aced6742d6",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8"
+      },
+      {
+        "t_ms": 2581,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "71fdcdd4-f9f1-427d-943d-033fbb1629be",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8"
+      },
+      {
+        "t_ms": 2635,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "738cf45b-878f-4984-9da7-fa8e5d02c9c3",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8"
+      },
+      {
+        "t_ms": 2639,
+        "kind": "sdk",
+        "type": "assistant",
+        "uuid": "1f71bb6b-d042-4b16-9893-986589978743",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8"
+      },
+      {
+        "t_ms": 2640,
+        "kind": "hook_enter",
+        "tool": "mcp__oc__combine",
+        "generating": true
+      },
+      {
+        "t_ms": 2640,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_stop",
+        "uuid": "5150f861-48fa-4e7b-976f-5c660a81af67",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8"
+      },
+      {
+        "t_ms": 2647,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_delta",
+        "uuid": "dcc23dc0-cc54-4774-b223-3156172ba8dd",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8"
+      },
+      {
+        "t_ms": 2647,
+        "kind": "release",
+        "reason": "message_delta",
+        "count": 1
+      },
+      {
+        "t_ms": 2647,
+        "kind": "hook_answer",
+        "tool": "mcp__oc__combine"
+      },
+      {
+        "t_ms": 2647,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_stop",
+        "uuid": "5b2a5b3b-c78c-4a9d-ae80-aee52dc232d9",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8"
+      },
+      {
+        "t_ms": 2647,
+        "kind": "release",
+        "reason": "message_stop",
+        "count": 0
+      },
+      {
+        "t_ms": 2648,
+        "kind": "sdk",
+        "type": "rate_limit_event",
+        "uuid": "66eff113-0c96-4197-9b7e-07dc97d19819",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8"
+      },
+      {
+        "t_ms": 2652,
+        "kind": "sdk",
+        "type": "user",
+        "uuid": "2de52e18-0176-4d1e-a65d-2ee0542dd97f",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8"
+      },
+      {
+        "t_ms": 2655,
+        "kind": "sdk",
+        "type": "result",
+        "uuid": "9d1838d4-b0b3-44c5-a250-a4e6b9c72070",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8"
+      },
+      {
+        "t_ms": 3144,
+        "kind": "exception",
+        "message": "Claude Code returned an error result: Reached maximum number of turns (1)"
+      },
+      {
+        "t_ms": 3144,
+        "kind": "release",
+        "reason": "finally",
+        "count": 0
+      }
+    ],
+    "assistant": [
+      {
+        "uuid": "1f71bb6b-d042-4b16-9893-986589978743",
+        "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8",
+        "content": [
+          {
+            "type": "tool_use",
+            "id": "toolu_01DZ1wJ8c7PZmyZTXsYKaJuY",
+            "name": "mcp__oc__combine",
+            "input": {
+              "values": [
+                "VALUE_alpha",
+                "VALUE_beta",
+                "VALUE_gamma"
+              ]
+            },
+            "caller": {
+              "type": "direct"
+            }
+          }
+        ]
+      }
+    ],
+    "result": {
+      "subtype": "error_max_turns",
+      "session_id": "48506ed4-e7d6-4ecd-be31-c20a9ab2c7e8",
+      "errors": [
+        "Reached maximum number of turns (1)"
+      ],
+      "cache_read_input_tokens": 1090
+    },
+    "stderrRows": 0
+  },
+  {
+    "name": "d-thinking",
+    "argv": [
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--input-format",
+      "stream-json",
+      "--max-thinking-tokens",
+      "1024",
+      "--max-turns",
+      "1",
+      "--model",
+      "sonnet",
+      "--allowedTools",
+      "mcp__oc__lookup,mcp__oc__combine",
+      "--tools",
+      "--setting-sources=",
+      "--strict-mcp-config",
+      "--permission-mode",
+      "bypassPermissions",
+      "--allow-dangerously-skip-permissions",
+      "--include-partial-messages"
+    ],
+    "timing": [
+      {
+        "t_ms": 538,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "2afc0e28-8fda-4e7b-aecb-ed115571af5a",
+        "session_id": "9dca7e02-8259-4e71-b328-a42d1ac3700c"
+      },
+      {
+        "t_ms": 540,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "082d2ad1-a1a7-4edf-8013-acae571735c0",
+        "session_id": "9dca7e02-8259-4e71-b328-a42d1ac3700c"
+      },
+      {
+        "t_ms": 1196,
+        "kind": "sdk",
+        "type": "rate_limit_event",
+        "uuid": "59832ba8-f9cd-422e-999d-bf70094bf0b5",
+        "session_id": "9dca7e02-8259-4e71-b328-a42d1ac3700c"
+      },
+      {
+        "t_ms": 2081,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_start",
+        "uuid": "4d3b42a7-7924-4964-9878-663859078243",
+        "session_id": "9dca7e02-8259-4e71-b328-a42d1ac3700c"
+      },
+      {
+        "t_ms": 2081,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_start",
+        "uuid": "e2aa9db3-a851-4771-ab0d-beb2ab6ca952",
+        "session_id": "9dca7e02-8259-4e71-b328-a42d1ac3700c"
+      },
+      {
+        "t_ms": 2081,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "20851e0d-7ac4-4224-a592-5a4178175d1b",
+        "session_id": "9dca7e02-8259-4e71-b328-a42d1ac3700c"
+      },
+      {
+        "t_ms": 2082,
+        "kind": "sdk",
+        "type": "assistant",
+        "uuid": "fcad1dfd-12a9-4906-8b18-edb63f51591c",
+        "session_id": "9dca7e02-8259-4e71-b328-a42d1ac3700c"
+      },
+      {
+        "t_ms": 2082,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_stop",
+        "uuid": "437c4b2f-522b-4aeb-8251-20455fbe0c23",
+        "session_id": "9dca7e02-8259-4e71-b328-a42d1ac3700c"
+      },
+      {
+        "t_ms": 2097,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_delta",
+        "uuid": "f58ff019-4662-44db-9f94-e3c02575de7a",
+        "session_id": "9dca7e02-8259-4e71-b328-a42d1ac3700c"
+      },
+      {
+        "t_ms": 2097,
+        "kind": "release",
+        "reason": "message_delta",
+        "count": 0
+      },
+      {
+        "t_ms": 2097,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_stop",
+        "uuid": "f7c88dcc-b577-49db-8f31-9eed4dfd0b20",
+        "session_id": "9dca7e02-8259-4e71-b328-a42d1ac3700c"
+      },
+      {
+        "t_ms": 2097,
+        "kind": "release",
+        "reason": "message_stop",
+        "count": 0
+      },
+      {
+        "t_ms": 2102,
+        "kind": "sdk",
+        "type": "result",
+        "uuid": "2b6c0b2a-33c4-45fd-935e-d8bed05f4b78",
+        "session_id": "9dca7e02-8259-4e71-b328-a42d1ac3700c"
+      },
+      {
+        "t_ms": 2511,
+        "kind": "release",
+        "reason": "finally",
+        "count": 0
+      }
+    ],
+    "assistant": [
+      {
+        "uuid": "fcad1dfd-12a9-4906-8b18-edb63f51591c",
+        "session_id": "9dca7e02-8259-4e71-b328-a42d1ac3700c",
+        "content": [
+          {
+            "type": "text",
+            "text": "391"
+          }
+        ]
+      }
+    ],
+    "result": {
+      "subtype": "success",
+      "session_id": "9dca7e02-8259-4e71-b328-a42d1ac3700c",
+      "cache_read_input_tokens": 0
+    },
+    "stderrRows": 0
+  },
+  {
+    "name": "e-image",
+    "argv": [
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--input-format",
+      "stream-json",
+      "--max-turns",
+      "1",
+      "--model",
+      "haiku",
+      "--allowedTools",
+      "mcp__oc__lookup,mcp__oc__combine",
+      "--tools",
+      "--setting-sources=",
+      "--strict-mcp-config",
+      "--permission-mode",
+      "bypassPermissions",
+      "--allow-dangerously-skip-permissions",
+      "--include-partial-messages"
+    ],
+    "timing": [
+      {
+        "t_ms": 431,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "5cdf395f-5b24-470e-a3ac-b0bf1a1559de",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 433,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "a0b8370d-1209-4823-8280-655139aba4b8",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 1939,
+        "kind": "sdk",
+        "type": "rate_limit_event",
+        "uuid": "9130eb6a-66eb-4aa2-bfb4-7a6e07cbb0e0",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 2468,
+        "kind": "sdk",
+        "type": "assistant",
+        "uuid": "eb77e929-b7c7-457e-9692-d4fab77ea491",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 2468,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_start",
+        "uuid": "3c2b4d95-eae3-4958-8713-b6c791e537f4",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 2468,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_start",
+        "uuid": "1d59a86d-686c-4a7c-ad7e-abfbc34431d2",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 2766,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "f6cf7837-98e8-4076-8243-d884866cfea1",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 2766,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "af78e977-dbb5-42a8-a9ef-604ad80e7296",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3530,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "fea3c0fd-38e7-4a8a-85a8-c39438ae460b",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3530,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "8902ad42-15bb-4356-a15d-377a76425dec",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3530,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "f84b0e70-265a-4c0f-bd60-bff2fd215d73",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3530,
+        "kind": "sdk",
+        "type": "assistant",
+        "uuid": "766fe049-f264-4377-bdf0-f05aeb7257b2",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3530,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_stop",
+        "uuid": "acaac311-8bcc-429e-937f-57c3ff380014",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3530,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_start",
+        "uuid": "9ffcb431-c521-4eaa-bb03-c27da7e90a9d",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3531,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "93d39ed7-017a-4c56-aaed-f3b0e598ebb7",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3549,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "05646e33-0a0d-4689-99c8-23004bfec29b",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3572,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "ef228ecb-f17e-4a34-90c7-39a1c34489f9",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3590,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "23960c14-af41-46cf-853f-f4ed3a63d055",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3613,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "5843cf99-5c21-4a0e-9049-c8569ddb75c7",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3629,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "1eff9393-ab3f-447a-8635-7f12ef1121f9",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3650,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "eed42e34-df67-4f03-ad61-64fba44e5f9d",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3671,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "04098d55-b569-4ae5-86c2-b43715c9f1c5",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3692,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "9d22f3ec-a29c-4150-a945-810090ef19d9",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3713,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "f90928ee-1c8c-4504-8e86-7bd63782eceb",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3813,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "3b0d4eeb-e068-4f4c-8753-5cebd181dc02",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3813,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "31dbebb7-672d-4621-b7a1-0de82de68e4f",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3813,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "54c9a5e6-dd50-48fe-be9e-33651cbf9d4e",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3813,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "1848720a-52bc-43f8-ba80-6861703c932b",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3814,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "12ee2ca3-d0e4-4503-ad01-9f3e26a93d28",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3835,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "4702d677-e5f6-4e0b-b514-dfc5e1e98bb4",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3850,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "882c1449-ddde-4f2f-8ed7-1a93f167eee5",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3854,
+        "kind": "sdk",
+        "type": "assistant",
+        "uuid": "c4ccbab1-be1f-4411-b12a-a32d75e01578",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3854,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_stop",
+        "uuid": "14a75426-9ed9-487b-a378-877b347c937e",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3865,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_delta",
+        "uuid": "3292bea0-2a4f-4bc3-b81b-835c99c3aed8",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3865,
+        "kind": "release",
+        "reason": "message_delta",
+        "count": 0
+      },
+      {
+        "t_ms": 3865,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_stop",
+        "uuid": "79d866e4-adfa-4ecd-a720-8691340bb4fe",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 3865,
+        "kind": "release",
+        "reason": "message_stop",
+        "count": 0
+      },
+      {
+        "t_ms": 3870,
+        "kind": "sdk",
+        "type": "result",
+        "uuid": "58d49e36-a4f1-40a1-a052-2684d1c15630",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762"
+      },
+      {
+        "t_ms": 4217,
+        "kind": "release",
+        "reason": "finally",
+        "count": 0
+      }
+    ],
+    "assistant": [
+      {
+        "uuid": "eb77e929-b7c7-457e-9692-d4fab77ea491",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762",
+        "content": [
+          {
+            "type": "text",
+            "text": "API Error: an image in the conversation could not be processed and was removed. Re-read the file with a different approach if you still need it."
+          }
+        ]
+      },
+      {
+        "uuid": "766fe049-f264-4377-bdf0-f05aeb7257b2",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762",
+        "content": [
+          {
+            "type": "thinking",
+            "thinking": "",
+            "signature": "CAQSxgsKEAgTGAI4AUIIdGhpbmtpbmcSDAJJrgmiJNsR0I+jqBoMORsuqH7nC7iVhUD7IjBukRwp4RynEYSuiUfKcB5CfXq/y3scDwLuBXT0FvnfyWqYjUDlLkUUT5iZoPzVBMsq4wrvi2Hxahw/hV/ExwZTVSMMMBjnp5dh3SPw5WoFIBll1ihWwFD1M2GdPIAQpbgU9Fsfv7u1LTtTB642vJ9XfjoF8QaM9xK1Fg4nwuZAAm7Oho/0j1JuDi4vw+DoLR+uqDW1vKv3DP07QpAY9N+rvlxBj/dtSPbC+3jbsN99sSWtiV59GQ5Ev/XvgMmtDDGShgA4nZ7Yn9q3vZ2+Noc/ig5grrYuKt6Y6wPREGpSy/J09vrxwAYsTxQGKvySZMFyq2A8+fjaPFfWCaA8z5h/MLd5pC8BuMyn3BE0Blep426rRfR3kr/K66tg3wso3M9aaEqB44iidSuPloblHkDzJ+JUWW7O6hqxL5QaSW+LXpcmCd2sj9xbx7stZU0t+D9PN2FoXHmAf/nx+1n5/Am0vp7Rhkkboe2Uy58elrLKO8wvbEGlUgP7ErDOmJJgHVwoMb5cM9aD5cpHsEtJ/57rJUqrKK2eR8Mzjd3HzUaqAYjHDqxH9Sku/nvIOqWcQtHCh9bBTd/+Sl6ztTwp0Q349U/7shY4ysJHnO8ybcTcHOXxgqC5b4N0MS2UU+pUDnPdvU9dy36jDRY9hDP0Q2bb+3bpmwtO491wkUE2Qy49Wm3vPCuvSMQUnnTQMYtOVrTtwQlcIKq37pe0WdQ03xwUIHaWjUbG1gbTDrmF+keZdfB4OzBqaTST8gFPMRp2OgrZ+FGFN3bjQi+aZJSHBGJIEK6vlzyt56so+QPHMycLu8IOqsobaB0A8c+mus4w0Tydz0QAuRPOYPQ3BmcGdKKJyISfzHiUFnYr4yhbsEzs88Epy2xv8hyxAdhlW55QvVUjE96h/ueDAO4RJFJvALE+R6MeRSH4JFaqNkLC9wHsF2YNMJD21CkpvpUy0ATRwmcIrlbKrBdrns3Q03WF7ZZrv4geo1yazTaT4A8+3buBFwYEAHG+dcMebo0e56qu0PH9KJNSUXHYTZeH51klXlJ5i3xgvedH71Dxv1C2XnAzg0Xx9nanrNj+J9TylrrRZ1Jmkcb0w0etiEhA5kyhrUA8rlRDjhUZLuhVNksSgtAVp0YECQP6Q3ZphffMiAW7izhsigdVpGpCcyAX51WUqnCl1beXeBGSvMIFMMMtF5ux/IE0S5d+feIJkwL8B8GzBTDTcbiZsvLPRFnSzC5V/SjqpE5B0/jrrjViayT/NXvcNDgncYd8ykKw55SYquUy7QADq0NPl3UwkwfcshFSRkfIK4NH3uMyGUtdv/ODgw8r05GEfd6A7ObAP2OaHvYP05FuEaqoluvpKfF2ThYuKfaba5t3LwGZ0wBkeFpCvQhpHL5TqirqdUajxSatP0pw1hIsobIhdmz6XFTuDgcHjwpBneVjscZa2rzUFA0bo/lQ+VOtPLsqMXoXJ5zG1CE4xqbFOFEUqXX6dHzj4ZPnol1WTK8g5tQNwz07yi8RPcfbC5Key14N18b0iRmCqBdB5SX2MIyvxsaSry92hY1+tZWhV/M+qc/2pwf0Qf31ys1B4/W5vEb7pN4qfXA7EfnFY51X3+xSKfLznI0g8P+aIV7swbSHN/wuF3PFtzVc7GKhsl3AmPWiGpif8qJmL2G3T5J/HljInLJxxnDtlEUcLDJq3KEytrqWLcqD465FFBnzfG53RACH8MyPgQdDjqb/25ga1VNE+p1MD4ms/pJhDSM8Nxm7HOE5lZ0aWvzOQTiHmtIzbpZMCDBgNbsbZruHmPtAipmXjZEOBFUgGUGmpsuCo/Syn/tcW38wKWdf/i9r6aHltYmw0fPVfSymjDqAcVQZlAY+UhmyxJpbp8IlgpmR971k0Xb+2zPApgvUZh+pt1DO2AkmzBgB"
+          }
+        ]
+      },
+      {
+        "uuid": "c4ccbab1-be1f-4411-b12a-a32d75e01578",
+        "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762",
+        "content": [
+          {
+            "type": "text",
+            "text": "I can't describe the image. The API rejected it as unprocessable, and I don't have a shell tool to inspect the file another way. If you can re-share it in a different format, such as PNG or JPEG, I can try again."
+          }
+        ]
+      }
+    ],
+    "result": {
+      "subtype": "success",
+      "session_id": "c397e60a-f530-4ef2-911f-6d3edd67c762",
+      "cache_read_input_tokens": 0
+    },
+    "stderrRows": 0
+  },
+  {
+    "name": "f-missing-session",
+    "argv": [
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--input-format",
+      "stream-json",
+      "--max-turns",
+      "1",
+      "--model",
+      "haiku",
+      "--resume",
+      "4ea3f3e7-19f3-4efa-b9c6-7e384fbcbfb7",
+      "--allowedTools",
+      "mcp__oc__lookup,mcp__oc__combine",
+      "--tools",
+      "--setting-sources=",
+      "--strict-mcp-config",
+      "--permission-mode",
+      "bypassPermissions",
+      "--allow-dangerously-skip-permissions",
+      "--include-partial-messages",
+      "--fork-session",
+      "--resume-session-at",
+      "43ba6628-b671-45e8-a983-bbe3b2f8db26"
+    ],
+    "timing": [
+      {
+        "t_ms": 408,
+        "kind": "sdk",
+        "type": "result",
+        "uuid": "9ae661b6-0dcd-4e31-929b-26c69470d2cc",
+        "session_id": "5b545080-432b-4b3d-818b-2b32971b5cd9"
+      },
+      {
+        "t_ms": 741,
+        "kind": "exception",
+        "message": "Claude Code returned an error result: No conversation found with session ID: 4ea3f3e7-19f3-4efa-b9c6-7e384fbcbfb7"
+      },
+      {
+        "t_ms": 741,
+        "kind": "release",
+        "reason": "finally",
+        "count": 0
+      }
+    ],
+    "assistant": [],
+    "result": {
+      "subtype": "error_during_execution",
+      "session_id": "5b545080-432b-4b3d-818b-2b32971b5cd9",
+      "errors": [
+        "No conversation found with session ID: 4ea3f3e7-19f3-4efa-b9c6-7e384fbcbfb7"
+      ],
+      "cache_read_input_tokens": 0
+    },
+    "stderrRows": 1
+  },
+  {
+    "name": "f-missing-uuid",
+    "argv": [
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--input-format",
+      "stream-json",
+      "--max-turns",
+      "1",
+      "--model",
+      "haiku",
+      "--resume",
+      "e7f281a8-bef6-48df-b282-ad9486a0970d",
+      "--allowedTools",
+      "mcp__oc__lookup,mcp__oc__combine",
+      "--tools",
+      "--setting-sources=",
+      "--strict-mcp-config",
+      "--permission-mode",
+      "bypassPermissions",
+      "--allow-dangerously-skip-permissions",
+      "--include-partial-messages",
+      "--fork-session",
+      "--resume-session-at",
+      "dd6727eb-c13b-4033-be37-83757ead2c2c"
+    ],
+    "timing": [
+      {
+        "t_ms": 353,
+        "kind": "sdk",
+        "type": "result",
+        "uuid": "25b5cd3a-5325-4fe1-b12d-b785177aeb0a",
+        "session_id": "b4b9706b-a2c3-438e-bc6c-4b3c8edc5396"
+      },
+      {
+        "t_ms": 1131,
+        "kind": "exception",
+        "message": "Claude Code returned an error result: No message found with message.uuid of: dd6727eb-c13b-4033-be37-83757ead2c2c"
+      },
+      {
+        "t_ms": 1131,
+        "kind": "release",
+        "reason": "finally",
+        "count": 0
+      }
+    ],
+    "assistant": [],
+    "result": {
+      "subtype": "error_during_execution",
+      "session_id": "b4b9706b-a2c3-438e-bc6c-4b3c8edc5396",
+      "errors": [
+        "No message found with message.uuid of: dd6727eb-c13b-4033-be37-83757ead2c2c"
+      ],
+      "cache_read_input_tokens": 0
+    },
+    "stderrRows": 1
+  },
+  {
+    "name": "f-seed",
+    "argv": [
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--input-format",
+      "stream-json",
+      "--max-turns",
+      "1",
+      "--model",
+      "haiku",
+      "--allowedTools",
+      "mcp__oc__lookup,mcp__oc__combine",
+      "--tools",
+      "--setting-sources=",
+      "--strict-mcp-config",
+      "--permission-mode",
+      "bypassPermissions",
+      "--allow-dangerously-skip-permissions",
+      "--include-partial-messages"
+    ],
+    "timing": [
+      {
+        "t_ms": 463,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "08905d27-17a8-431e-b2ed-0f91eb4ef879",
+        "session_id": "e7f281a8-bef6-48df-b282-ad9486a0970d"
+      },
+      {
+        "t_ms": 465,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "75181f59-665e-4709-b238-870777741f7c",
+        "session_id": "e7f281a8-bef6-48df-b282-ad9486a0970d"
+      },
+      {
+        "t_ms": 2256,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_start",
+        "uuid": "5c6f9315-484c-4259-b035-26e3b32f69fe",
+        "session_id": "e7f281a8-bef6-48df-b282-ad9486a0970d"
+      },
+      {
+        "t_ms": 2256,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_start",
+        "uuid": "f2e4b4f9-6412-41ce-bd61-69e627ee478f",
+        "session_id": "e7f281a8-bef6-48df-b282-ad9486a0970d"
+      },
+      {
+        "t_ms": 2256,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "ec880c71-69a6-4ba4-95d3-c2898e7a23aa",
+        "session_id": "e7f281a8-bef6-48df-b282-ad9486a0970d"
+      },
+      {
+        "t_ms": 2496,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "536f3513-74f3-4f4d-ab50-c0c3f51f55dc",
+        "session_id": "e7f281a8-bef6-48df-b282-ad9486a0970d"
+      },
+      {
+        "t_ms": 2498,
+        "kind": "sdk",
+        "type": "assistant",
+        "uuid": "5f8b4de3-f403-4633-a6ad-545c8bede857",
+        "session_id": "e7f281a8-bef6-48df-b282-ad9486a0970d"
+      },
+      {
+        "t_ms": 2498,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_stop",
+        "uuid": "d1958387-744d-4386-bad6-39a2878615f7",
+        "session_id": "e7f281a8-bef6-48df-b282-ad9486a0970d"
+      },
+      {
+        "t_ms": 2518,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_delta",
+        "uuid": "f890fd23-b563-463b-b07d-f788732cd1f3",
+        "session_id": "e7f281a8-bef6-48df-b282-ad9486a0970d"
+      },
+      {
+        "t_ms": 2518,
+        "kind": "release",
+        "reason": "message_delta",
+        "count": 0
+      },
+      {
+        "t_ms": 2518,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_stop",
+        "uuid": "a501ef4d-276c-4a33-b21a-ddfe8d71a194",
+        "session_id": "e7f281a8-bef6-48df-b282-ad9486a0970d"
+      },
+      {
+        "t_ms": 2518,
+        "kind": "release",
+        "reason": "message_stop",
+        "count": 0
+      },
+      {
+        "t_ms": 2518,
+        "kind": "sdk",
+        "type": "rate_limit_event",
+        "uuid": "f92d3b54-5e7f-48b2-80dd-862307069dfb",
+        "session_id": "e7f281a8-bef6-48df-b282-ad9486a0970d"
+      },
+      {
+        "t_ms": 2522,
+        "kind": "sdk",
+        "type": "result",
+        "uuid": "ee9b2c09-ca2e-44de-bc96-057c7f0bd2c0",
+        "session_id": "e7f281a8-bef6-48df-b282-ad9486a0970d"
+      },
+      {
+        "t_ms": 2844,
+        "kind": "release",
+        "reason": "finally",
+        "count": 0
+      }
+    ],
+    "assistant": [
+      {
+        "uuid": "5f8b4de3-f403-4633-a6ad-545c8bede857",
+        "session_id": "e7f281a8-bef6-48df-b282-ad9486a0970d",
+        "content": [
+          {
+            "type": "text",
+            "text": "OK"
+          }
+        ]
+      }
+    ],
+    "result": {
+      "subtype": "success",
+      "session_id": "e7f281a8-bef6-48df-b282-ad9486a0970d",
+      "cache_read_input_tokens": 0
+    },
+    "stderrRows": 0
+  },
+  {
+    "name": "upstream-tool",
+    "argv": [
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--input-format",
+      "stream-json",
+      "--max-turns",
+      "1",
+      "--model",
+      "haiku",
+      "--allowedTools",
+      "mcp__oc__lookup,mcp__oc__combine",
+      "--tools",
+      "--setting-sources=",
+      "--strict-mcp-config",
+      "--permission-mode",
+      "bypassPermissions",
+      "--allow-dangerously-skip-permissions",
+      "--include-partial-messages"
+    ],
+    "timing": [
+      {
+        "t_ms": 541,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "6cb82466-249c-4084-8438-870b9c95cda9",
+        "session_id": "138e3aa7-a26a-4cfc-9095-1bb9386d8a71"
+      },
+      {
+        "t_ms": 543,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "c4fe0e07-88d6-4823-9d76-4614ffe53a56",
+        "session_id": "138e3aa7-a26a-4cfc-9095-1bb9386d8a71"
+      },
+      {
+        "t_ms": 971,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_start",
+        "uuid": "c1659d1d-ba31-473b-9546-0dd452dd1be0",
+        "session_id": "138e3aa7-a26a-4cfc-9095-1bb9386d8a71"
+      },
+      {
+        "t_ms": 971,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_start",
+        "uuid": "cc46b959-1370-4066-9ace-b84a82119542",
+        "session_id": "138e3aa7-a26a-4cfc-9095-1bb9386d8a71"
+      },
+      {
+        "t_ms": 971,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "7c28a901-b774-483a-bc1f-7d645e2c2a54",
+        "session_id": "138e3aa7-a26a-4cfc-9095-1bb9386d8a71"
+      },
+      {
+        "t_ms": 1111,
+        "kind": "sdk",
+        "type": "rate_limit_event",
+        "uuid": "134746d0-c968-44a4-9938-7a7a5ebe0c87",
+        "session_id": "138e3aa7-a26a-4cfc-9095-1bb9386d8a71"
+      },
+      {
+        "t_ms": 1141,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "c9636377-cc1f-4764-b8ed-3e2ef6e0adfd",
+        "session_id": "138e3aa7-a26a-4cfc-9095-1bb9386d8a71"
+      },
+      {
+        "t_ms": 1141,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "b88d4f88-7c0b-4916-ae68-2266992687fe",
+        "session_id": "138e3aa7-a26a-4cfc-9095-1bb9386d8a71"
+      },
+      {
+        "t_ms": 1141,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "981181c3-5b7b-4c80-9aeb-c7c0b14104eb",
+        "session_id": "138e3aa7-a26a-4cfc-9095-1bb9386d8a71"
+      },
+      {
+        "t_ms": 1143,
+        "kind": "sdk",
+        "type": "assistant",
+        "uuid": "5d3411fc-5b2a-4304-ae1d-02ff5f57bed8",
+        "session_id": "138e3aa7-a26a-4cfc-9095-1bb9386d8a71"
+      },
+      {
+        "t_ms": 1146,
+        "kind": "hook_enter",
+        "tool": "mcp__oc__lookup",
+        "generating": true
+      },
+      {
+        "t_ms": 1146,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_stop",
+        "uuid": "d4f4683e-89cb-409c-a977-9354c9dfd999",
+        "session_id": "138e3aa7-a26a-4cfc-9095-1bb9386d8a71"
+      },
+      {
+        "t_ms": 1148,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_delta",
+        "uuid": "b17e9f19-6ba3-437e-89d7-f5a79659ab59",
+        "session_id": "138e3aa7-a26a-4cfc-9095-1bb9386d8a71"
+      },
+      {
+        "t_ms": 1148,
+        "kind": "release",
+        "reason": "message_delta",
+        "count": 1
+      },
+      {
+        "t_ms": 1148,
+        "kind": "hook_answer",
+        "tool": "mcp__oc__lookup"
+      },
+      {
+        "t_ms": 1148,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_stop",
+        "uuid": "5c0746a8-8743-4be0-8dd3-5eefc8f4faf6",
+        "session_id": "138e3aa7-a26a-4cfc-9095-1bb9386d8a71"
+      },
+      {
+        "t_ms": 1148,
+        "kind": "release",
+        "reason": "message_stop",
+        "count": 0
+      },
+      {
+        "t_ms": 1153,
+        "kind": "sdk",
+        "type": "user",
+        "uuid": "16b3c29e-415f-424a-ad7d-c5d3abcf140d",
+        "session_id": "138e3aa7-a26a-4cfc-9095-1bb9386d8a71"
+      },
+      {
+        "t_ms": 1156,
+        "kind": "sdk",
+        "type": "result",
+        "uuid": "32ac87e5-debe-4d6d-adf1-c562bc35e72c",
+        "session_id": "138e3aa7-a26a-4cfc-9095-1bb9386d8a71"
+      },
+      {
+        "t_ms": 1568,
+        "kind": "exception",
+        "message": "Claude Code returned an error result: Reached maximum number of turns (1)"
+      },
+      {
+        "t_ms": 1568,
+        "kind": "release",
+        "reason": "finally",
+        "count": 0
+      }
+    ],
+    "assistant": [
+      {
+        "uuid": "5d3411fc-5b2a-4304-ae1d-02ff5f57bed8",
+        "session_id": "138e3aa7-a26a-4cfc-9095-1bb9386d8a71",
+        "content": [
+          {
+            "type": "tool_use",
+            "id": "toolu_01CYv6CRrhTFpAvkja57kshr",
+            "name": "mcp__oc__lookup",
+            "input": {
+              "key": "alpha"
+            },
+            "caller": {
+              "type": "direct"
+            }
+          }
+        ]
+      }
+    ],
+    "result": {
+      "subtype": "error_max_turns",
+      "session_id": "138e3aa7-a26a-4cfc-9095-1bb9386d8a71",
+      "errors": [
+        "Reached maximum number of turns (1)"
+      ],
+      "cache_read_input_tokens": 1072
+    },
+    "stderrRows": 0
+  },
+  {
+    "name": "upstream-tool-resume",
+    "argv": [
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--input-format",
+      "stream-json",
+      "--max-turns",
+      "1",
+      "--model",
+      "haiku",
+      "--resume",
+      "138e3aa7-a26a-4cfc-9095-1bb9386d8a71",
+      "--allowedTools",
+      "mcp__oc__lookup,mcp__oc__combine",
+      "--tools",
+      "--setting-sources=",
+      "--strict-mcp-config",
+      "--permission-mode",
+      "bypassPermissions",
+      "--allow-dangerously-skip-permissions",
+      "--include-partial-messages",
+      "--fork-session",
+      "--resume-session-at",
+      "5d3411fc-5b2a-4304-ae1d-02ff5f57bed8"
+    ],
+    "timing": [
+      {
+        "t_ms": 454,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "c416b070-ec95-46d4-aaf0-93bb5f4daa6d",
+        "session_id": "ba71ff00-d54c-4ff7-ad5a-018ef078e7ea"
+      },
+      {
+        "t_ms": 456,
+        "kind": "sdk",
+        "type": "system",
+        "uuid": "55ebc908-ea26-4358-a658-e795b9712fdd",
+        "session_id": "ba71ff00-d54c-4ff7-ad5a-018ef078e7ea"
+      },
+      {
+        "t_ms": 1752,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_start",
+        "uuid": "f97f79a7-880b-436f-b628-821efab90ad4",
+        "session_id": "ba71ff00-d54c-4ff7-ad5a-018ef078e7ea"
+      },
+      {
+        "t_ms": 1752,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_start",
+        "uuid": "c0285ea7-1698-4387-87c7-9fa3cbfa5280",
+        "session_id": "ba71ff00-d54c-4ff7-ad5a-018ef078e7ea"
+      },
+      {
+        "t_ms": 1752,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "4119265e-fa92-4653-962e-a836df653084",
+        "session_id": "ba71ff00-d54c-4ff7-ad5a-018ef078e7ea"
+      },
+      {
+        "t_ms": 1788,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_delta",
+        "uuid": "c7bd7467-5128-4d46-b3b4-d04136e7ebea",
+        "session_id": "ba71ff00-d54c-4ff7-ad5a-018ef078e7ea"
+      },
+      {
+        "t_ms": 1802,
+        "kind": "sdk",
+        "type": "assistant",
+        "uuid": "eb460157-24cd-4a67-b1ab-d9051b2cd0c1",
+        "session_id": "ba71ff00-d54c-4ff7-ad5a-018ef078e7ea"
+      },
+      {
+        "t_ms": 1802,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "content_block_stop",
+        "uuid": "ac16ee96-94e6-4ea3-a6be-666608da3239",
+        "session_id": "ba71ff00-d54c-4ff7-ad5a-018ef078e7ea"
+      },
+      {
+        "t_ms": 1806,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_delta",
+        "uuid": "b89f2f82-a7a1-467e-9687-97b2efac68a7",
+        "session_id": "ba71ff00-d54c-4ff7-ad5a-018ef078e7ea"
+      },
+      {
+        "t_ms": 1807,
+        "kind": "release",
+        "reason": "message_delta",
+        "count": 0
+      },
+      {
+        "t_ms": 1807,
+        "kind": "sdk",
+        "type": "stream_event",
+        "event": "message_stop",
+        "uuid": "79420bb0-33d3-4f60-87af-1f2a5585a98c",
+        "session_id": "ba71ff00-d54c-4ff7-ad5a-018ef078e7ea"
+      },
+      {
+        "t_ms": 1807,
+        "kind": "release",
+        "reason": "message_stop",
+        "count": 0
+      },
+      {
+        "t_ms": 1807,
+        "kind": "sdk",
+        "type": "rate_limit_event",
+        "uuid": "cbcb73a0-484c-4b6a-9329-bf4595bcce85",
+        "session_id": "ba71ff00-d54c-4ff7-ad5a-018ef078e7ea"
+      },
+      {
+        "t_ms": 1811,
+        "kind": "sdk",
+        "type": "result",
+        "uuid": "2282b5ac-b564-4638-a994-261dd1247b4e",
+        "session_id": "ba71ff00-d54c-4ff7-ad5a-018ef078e7ea"
+      },
+      {
+        "t_ms": 2181,
+        "kind": "release",
+        "reason": "finally",
+        "count": 0
+      }
+    ],
+    "assistant": [
+      {
+        "uuid": "eb460157-24cd-4a67-b1ab-d9051b2cd0c1",
+        "session_id": "ba71ff00-d54c-4ff7-ad5a-018ef078e7ea",
+        "content": [
+          {
+            "type": "text",
+            "text": "VALUE_alpha"
+          }
+        ]
+      }
+    ],
+    "result": {
+      "subtype": "success",
+      "session_id": "ba71ff00-d54c-4ff7-ad5a-018ef078e7ea",
+      "cache_read_input_tokens": 1157
+    },
+    "stderrRows": 0
+  }
+]

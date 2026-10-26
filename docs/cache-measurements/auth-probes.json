@@ -1,0 +1,12 @@
+{
+  "type": "local authentication status probes; no generation requests",
+  "cli_version": "2.1.308",
+  "polytoken_version": "0.9.2",
+  "probes": [
+    {"configuration": "temporary HOME and XDG directories", "exit": 1, "loggedIn": false},
+    {"configuration": "temporary HOME and XDG directories, copy of original .claude.json", "exit": 1, "loggedIn": false},
+    {"configuration": "temporary CLAUDE_CONFIG_DIR", "exit": 1, "loggedIn": false}
+  ],
+  "live_generation_requests": 0,
+  "limitation": "Authentication-status commands may contact authentication services; no model generation commands were invoked. No authentication response fields other than loggedIn were recorded."
+}
