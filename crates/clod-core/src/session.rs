@@ -43,6 +43,7 @@ pub fn canonical_json(value: &Value) -> Vec<u8> {
     // serde_json's default map representation is a sorted BTreeMap.
     serde_json::to_vec(&clean(value, true)).expect("JSON Value serialization is infallible")
 }
+#[cfg(test)]
 fn hash(value: &Value) -> Hash {
     Sha256::digest(canonical_json(value)).into()
 }
@@ -103,7 +104,18 @@ pub fn key_with_mode(request: &Request, _mode: KeyMode) -> Option<SessionKey> {
             .and_then(Value::as_str)
             .cmp(&b.get("name").and_then(Value::as_str))
     });
-    Some(hash(&json!([id, request.model, request.system, tools])))
+    // System content has transport annotations; tool definitions are arbitrary
+    // JSON data. Cleaning schemas would erase parameters named cache_control or
+    // defaults whose content happens to resemble thinking blocks.
+    let system =
+        serde_json::to_value(&request.system).expect("content serialization is infallible");
+    let components = json!([id, request.model, clean(&system, true), tools]);
+    Some(
+        Sha256::digest(
+            serde_json::to_vec(&components).expect("JSON Value serialization is infallible"),
+        )
+        .into(),
+    )
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
