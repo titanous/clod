@@ -30,6 +30,8 @@ struct Script {
     no_stdin: bool,
     #[serde(default)]
     exit_delay_ms: u64,
+    #[serde(default)]
+    grandchild: bool,
 }
 struct Log {
     path: PathBuf,
@@ -51,6 +53,11 @@ fn record(file: &Mutex<Log>, mut value: Value) {
 }
 fn main() {
     let args: Vec<_> = env::args().skip(1).collect();
+    if args == ["--grandchild"] {
+        loop {
+            thread::park();
+        }
+    }
     if args == ["--version"] {
         println!("2.1.308 (Claude Code)");
         return;
@@ -77,6 +84,14 @@ fn main() {
         &file,
         json!({"argv":args,"env":env::vars().collect::<std::collections::BTreeMap<_,_>>(),"cwd":env::current_dir().unwrap(),"pid":std::process::id(),"inherited_fds":inherited_fds}),
     );
+    if script.grandchild {
+        // Inherit the CLI's process group, as an MCP/tool subprocess would.
+        let child = std::process::Command::new(env::current_exe().unwrap())
+            .arg("--grandchild")
+            .spawn()
+            .unwrap();
+        record(&file, json!({"grandchild_pid":child.id()}));
+    }
     if script.no_stdin {
         loop {
             thread::park();
