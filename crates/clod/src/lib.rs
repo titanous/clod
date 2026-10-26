@@ -317,6 +317,11 @@ impl Process {
 }
 impl Drop for Process {
     fn drop(&mut self) {
+        if self.child.id().is_some() {
+            // Until wait reaps our child, its PID (even as a zombie) reserves the
+            // group ID. After reaping, skip this to avoid signalling a reused PGID.
+            self.kill();
+        }
         self.writer.abort();
     }
 }
