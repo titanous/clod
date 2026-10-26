@@ -1,0 +1,12 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc a422b24115ff6fdfc47d1b8eb1e4da1d1fc1ddbcb40c335d774ff2579a5c8ce8 # shrinks to (stream,resume,ops) = (false, false, [Gone, StdinFailed, Tick(2000), StderrEof, Out(13)])
+cc 55ded6d3c0e6763ff96a9fa11d15445228b5a427a313afc4a1a45822b43e2eaa # shrinks to (stream,resume,ops) = (false, false, [Out(0), Out(15), Tick(60000), Out(2), Out(15), Out(6), Out(8)])
+cc d512b54cef6c1617c2af05f1e0647450a35354a056453fe2dbe750c538ff4aac # shrinks to (stream,resume,ops) = (false, false, [Out(0), Out(15), Tick(60000), Out(2), Out(15), Out(5), Out(9)])
+cc 162513bfd00e691d4e1139d2e09943f0972a7b8cd02e3d5c790b47a0498226ee # shrinks to (stream,resume,ops) = (false, false, [Out(6), Out(8), Tick(4999), Tick(1)])
+cc 23806c13fc5a9c88c42339e2c921d620b6caae0a9b02491f5b9852f9e3aee036 # shrinks to (stream,resume,ops) = (false, false, [Out(6), Out(5), Out(9)])
+cc 215b2df3cb43f9f726a32fb782df6090aa8799bff9cc4577ac45e8b432ad6f0c # shrinks to (stream,resume,ops) = (false, true, [StdoutEof, Err(true), StderrEof, Exit, Out(1), Out(15), Out(6), Out(8)])
