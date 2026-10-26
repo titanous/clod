@@ -55,6 +55,10 @@ fn main() {
         println!("2.1.308 (Claude Code)");
         return;
     }
+    // Inspect before opening scenario/log files: these descriptors crossed exec.
+    let inherited_fds: Vec<_> = (3..unsafe { libc::getdtablesize() })
+        .filter(|fd| unsafe { libc::fcntl(*fd, libc::F_GETFD) } >= 0)
+        .collect();
     let path = PathBuf::from(env::var_os("FAKE_CLAUDE_SCENARIO").expect("FAKE_CLAUDE_SCENARIO"));
     let scenario: Scenario = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
     let script = if args.iter().any(|a| a == "--resume") {
@@ -71,7 +75,7 @@ fn main() {
     }));
     record(
         &file,
-        json!({"argv":args,"env":env::vars().collect::<std::collections::BTreeMap<_,_>>(),"cwd":env::current_dir().unwrap(),"pid":std::process::id()}),
+        json!({"argv":args,"env":env::vars().collect::<std::collections::BTreeMap<_,_>>(),"cwd":env::current_dir().unwrap(),"pid":std::process::id(),"inherited_fds":inherited_fds}),
     );
     if script.no_stdin {
         loop {

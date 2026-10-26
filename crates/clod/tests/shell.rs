@@ -91,6 +91,7 @@ impl Server {
             .env("NO_COLOR", "1")
             .env("CLOD_TURN_TIMEOUT_MS", "3000")
             .env("CLOD_MAX_CONCURRENT", "2")
+            .env("CLOD_MEASURE_LOG", dir.path().join("measure.ndjson"))
             .env("ANTHROPIC_API_KEY", "must-remove")
             .env("ANTHROPIC_CUSTOM_SETTING", "must-remove")
             .env("CLAUDE_CODE_USE_BEDROCK", "must-remove")
@@ -299,6 +300,16 @@ async fn shell_spawn_matches_spec() {
     );
     let spec = clod_core::spawn::spec(&request, &clod_core::session::Plan::Fresh, &config);
     assert_eq!(log["argv"], json!(spec.args));
+    for fd in log["inherited_fds"].as_array().unwrap() {
+        let fd = fd.as_i64().unwrap() as i32;
+        // SAFETY: F_GETFD only reads flags for this process's descriptor.
+        let flags = unsafe { libc::fcntl(fd, libc::F_GETFD) };
+        assert!(
+            flags >= 0 && flags & libc::FD_CLOEXEC == 0,
+            "CLI inherited unexpected fd {fd}; not inherited from test runner"
+        );
+        eprintln!("CLI inherited upstream non-CLOEXEC descriptor {fd}");
+    }
     assert_eq!(
         PathBuf::from(log["cwd"].as_str().unwrap())
             .canonicalize()
