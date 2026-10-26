@@ -9,6 +9,8 @@ use proptest::prelude::*;
 use serde_json::json;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+mod lifecycle_round2;
+
 #[derive(Clone, Debug)]
 enum Op {
     Out(u8),
@@ -252,8 +254,8 @@ impl Model {
                 }
                 _ => {}
             },
-            // Existing review regressions require stale to override cancellation;
-            // PLAN.md's fixed-effect precedence disagrees (see discovery report).
+            // Reviewed policy: stale evidence overrides cancellation Keep.
+            // Successful result classification remains fixed during cleanup.
             Op::Out(13) | Op::Err(true) if !self.result => {
                 self.stale = true;
                 self.selected = Some(Effect::Discard);
