@@ -11,8 +11,9 @@ use sha2::{Digest, Sha256};
 pub type Hash = [u8; 32];
 pub type SessionKey = Hash;
 
-/// Canonicalize JSON recursively. Only content blocks are omitted; tool schemas
-/// and inputs may legitimately contain objects with a `type` property.
+/// Remove cache annotations recursively and drop thinking blocks from arrays
+/// under `content`. Only for annotated message/system content: never apply it
+/// to tool definitions or tool inputs, which are arbitrary JSON data.
 fn clean(value: &Value, in_blocks: bool) -> Value {
     match value {
         Value::Object(object) => Value::Object(
@@ -39,6 +40,8 @@ fn clean(value: &Value, in_blocks: bool) -> Value {
     }
 }
 /// Sorted object keys, compact JSON, no cache annotations or thinking blocks.
+/// Not used for session keys or history hashes; see `key_with_mode` and
+/// `canonical_history`.
 pub fn canonical_json(value: &Value) -> Vec<u8> {
     // serde_json's default map representation is a sorted BTreeMap.
     serde_json::to_vec(&clean(value, true)).expect("JSON Value serialization is infallible")
