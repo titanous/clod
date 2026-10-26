@@ -152,6 +152,12 @@ proptest! {
         prop_assert_ne!(session::key(&a), session::key(&b));
         a.tools = vec![json!({"name":"b","input_schema":{"z":s,"a":1}}),json!({"name":"a"})];
         b = a.clone(); b.tools.reverse(); prop_assert_eq!(session::key(&a), session::key(&b));
+        for index in 0..2 {
+            for ttl in ["5m", "1h"] {
+                b = a.clone(); b.tools[index]["cache_control"] = json!({"type":"ephemeral","ttl":ttl});
+                prop_assert_eq!(session::key(&a), session::key(&b));
+            }
+        }
     }
     #[test]
     fn replay_media_order_and_thinking(s in strings()) {
