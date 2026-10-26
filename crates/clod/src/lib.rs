@@ -253,6 +253,8 @@ struct Process {
     stderr_eof: bool,
     exit: Option<i32>,
     killed: Option<Instant>,
+    #[cfg(test)]
+    group_signals: Option<usize>,
 }
 impl Process {
     fn spawn(spec: clod_core::spawn::SpawnSpec) -> io::Result<Self> {
@@ -304,11 +306,25 @@ impl Process {
             stderr_eof: false,
             exit: None,
             killed: None,
+            #[cfg(test)]
+            group_signals: None,
         })
     }
     fn kill(&mut self) {
-        // SAFETY: the child created this process group. Retain the ID after wait()
-        // so descendants holding a pipe are signalled even if the leader exited.
+        if self.child.id().is_some() {
+            self.kill_group();
+        }
+    }
+    // Only the wait arm may call this immediately after reaping, with no await
+    // in between. All later cleanup must use kill(), since the PGID may be reused.
+    fn kill_group(&mut self) {
+        // SAFETY: this is our unreaped child's group, or immediate reap cleanup.
+        #[cfg(test)]
+        if let Some(count) = &mut self.group_signals {
+            *count += 1;
+            self.killed.get_or_insert_with(Instant::now);
+            return;
+        }
         unsafe {
             libc::killpg(self.group, libc::SIGKILL);
         }
@@ -534,8 +550,38 @@ async fn run(
             }
             status = p.child.wait(), if p.exit.is_none() => {
                 p.exit = Some(status.ok().and_then(|s| s.code()).unwrap_or(-1));
-                p.kill();
+                p.kill_group();
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod process_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn reaped_child_ignores_later_group_kills() {
+        let mut process = Process::spawn(clod_core::spawn::SpawnSpec {
+            program: "/usr/bin/true".into(),
+            args: vec![],
+            env_set: vec![],
+            env_remove: vec![],
+            working_directory: std::env::temp_dir().to_str().unwrap().into(),
+        })
+        .unwrap();
+        // Intercept signals rather than risk signalling an unrelated reused PGID.
+        // This isolates the boundary even when a descendant holds a pipe open.
+        process.group_signals = Some(0);
+        process.child.wait().await.unwrap();
+        assert!(process.child.id().is_none());
+        process.kill_group(); // immediate cleanup in the wait arm
+        assert_eq!(process.group_signals, Some(1));
+        process.kill(); // later timeout action while EOF is outstanding
+        assert_eq!(
+            process.group_signals,
+            Some(1),
+            "post-reap timeout must not signal a reusable group ID"
+        );
     }
 }
