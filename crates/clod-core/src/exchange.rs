@@ -71,6 +71,7 @@ pub struct Exchange {
     recorded: BTreeSet<String>,
     content: Vec<Value>,
     streamed_content: Vec<Value>,
+    content_indexes: alloc::collections::BTreeMap<u64, usize>,
     input_fragments: alloc::collections::BTreeMap<String, String>,
     message: Value,
     terminal: Value,
@@ -134,6 +135,7 @@ impl Exchange {
             recorded: BTreeSet::new(),
             content: vec![],
             streamed_content: vec![],
+            content_indexes: alloc::collections::BTreeMap::new(),
             input_fragments: alloc::collections::BTreeMap::new(),
             message: Value::Null,
             terminal: json!({"type":"message_delta","delta":{"stop_reason":"end_turn","stop_sequence":null},"usage":{"output_tokens":0}}),
@@ -359,10 +361,21 @@ impl Exchange {
                                 self.streamed.insert(id.into());
                             }
                         }
-                        self.streamed_content.push(block.clone());
+                        let block = block.clone();
+                        if let Some(index) = event["index"].as_u64() {
+                            self.content_indexes
+                                .insert(index, self.streamed_content.len());
+                        }
+                        self.streamed_content.push(block);
                     }
                     "content_block_delta" => {
-                        if let Some(block) = self.streamed_content.last_mut() {
+                        let position = if let Some(index) = event["index"].as_u64() {
+                            self.content_indexes.get(&index).copied()
+                        } else {
+                            self.streamed_content.len().checked_sub(1)
+                        };
+                        if let Some(block) = position.and_then(|p| self.streamed_content.get_mut(p))
+                        {
                             let delta = &event["delta"];
                             let field = match delta["type"].as_str() {
                                 Some("text_delta") => Some(("text", "text")),
