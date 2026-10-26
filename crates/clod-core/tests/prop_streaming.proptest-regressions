@@ -6,3 +6,4 @@
 # everyone who runs the test benefits from these saved cases.
 cc 07a31a8b7a45698454b905dd51b1bc408e2f597f5fe7194d4235caff5e42a14f # shrinks to t = Turn { kinds: [0], payload: "", cuts: [], invalid: 0 }
 cc f3de36844b8bccbb519a102bc7e9fbebdb7169ed80d1ad35c0f4ddec15fa8649 # shrinks to t = Turn { kinds: [2], payload: "", cuts: [], invalid: 5 }
+cc 82d8daea992481196dcfa1d131abe78c1caef27ce4ca72d41760cb83dc328ab0 # shrinks to bits = [false, true], positions = [], first = false

@@ -181,12 +181,10 @@ impl Turn {
     }
 }
 fn run(lines: &[Value], stream: bool) -> Vec<(usize, Action)> {
-    let (mut e, _) = Exchange::new(
-        request(stream, initial()),
-        &SessionMap::default(),
-        Config::new("/empty"),
-        0,
-    );
+    run_request(lines, request(stream, initial()))
+}
+fn run_request(lines: &[Value], request: Request) -> Vec<(usize, Action)> {
+    let (mut e, _) = Exchange::new(request, &SessionMap::default(), Config::new("/empty"), 0);
     let mut actions = vec![];
     for (i, line) in lines.iter().enumerate() {
         actions.extend(
@@ -468,41 +466,75 @@ proptest! {
     }
 }
 fn response(actions: &[(usize, Action)]) -> &Value {
-    actions.iter().find_map(|(_,a)| if let Action::RespondJson(200,v)=a {Some(v)}else{None}).unwrap()
+    actions
+        .iter()
+        .find_map(|(_, a)| {
+            if let Action::RespondJson(200, v) = a {
+                Some(v)
+            } else {
+                None
+            }
+        })
+        .unwrap()
 }
 fn committed(actions: &[(usize, Action)]) -> Option<&session::Checkpoint> {
-    actions.iter().find_map(|(_,a)| if let Action::Done(d)=a {if let MapEffect::Commit(cp)=&d.map_effect {Some(cp)}else{None}}else{None})
+    actions.iter().find_map(|(_, a)| {
+        if let Action::Done(d) = a {
+            if let MapEffect::Commit(cp) = &d.map_effect {
+                Some(cp)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    })
 }
 #[test]
 fn thinking_only_and_redacted_with_and_without_stream_records() {
     for blocks in [
         vec![json!({"type":"thinking","thinking":"reason é","signature":"signed"})],
         vec![json!({"type":"redacted_thinking","data":"opaque 🦀"})],
-        vec![json!({"type":"thinking","thinking":"reason","signature":"signed"}),json!({"type":"redacted_thinking","data":"opaque"})],
+        vec![
+            json!({"type":"thinking","thinking":"reason","signature":"signed"}),
+            json!({"type":"redacted_thinking","data":"opaque"}),
+        ],
     ] {
-        for streamed in [false,true] {
-            let mut lines=vec![];
+        for streamed in [false, true] {
+            let mut lines = vec![];
             if streamed {
-                lines.push(event(json!({"type":"message_start","message":{"id":"msg","content":[]}})));
-                for (i,b) in blocks.iter().enumerate() {
-                    lines.push(event(json!({"type":"content_block_start","index":i,"content_block":b})));
+                lines.push(event(
+                    json!({"type":"message_start","message":{"id":"msg","content":[]}}),
+                ));
+                for (i, b) in blocks.iter().enumerate() {
+                    lines.push(event(
+                        json!({"type":"content_block_start","index":i,"content_block":b}),
+                    ));
                     lines.push(event(json!({"type":"content_block_stop","index":i})));
                 }
-                lines.push(event(json!({"type":"message_delta","delta":{"stop_reason":"end_turn"}})));
+                lines.push(event(
+                    json!({"type":"message_delta","delta":{"stop_reason":"end_turn"}}),
+                ));
                 lines.push(event(json!({"type":"message_stop"})));
             }
             lines.push(json!({"type":"assistant","uuid":"thinking-final","session_id":"fork","message":{"content":blocks,"stop_reason":"end_turn"}}));
             lines.push(json!({"type":"result","subtype":"success","session_id":"fork"}));
-            let buffered=run(&lines,false);
-            assert_eq!(response(&buffered)["content"],json!(blocks));
+            let buffered = run(&lines, false);
+            assert_eq!(response(&buffered)["content"], json!(blocks));
             // With no message_delta the contract leaves stop_reason fallback unspecified.
-            if streamed {assert_eq!(response(&buffered)["stop_reason"],"end_turn");}
-            let cp=committed(&buffered).expect("thinking-only checkpoint");
-            assert_eq!(cp.resume_uuid,"thinking-final");assert!(cp.pending_tool_ids.is_empty());
             if streamed {
-                let s=run(&lines,true);
-                assert_eq!(accumulate(&s),json!({"content":blocks,"stop_reason":"end_turn"}));
-                assert_eq!(committed(&s),Some(cp));
+                assert_eq!(response(&buffered)["stop_reason"], "end_turn");
+            }
+            let cp = committed(&buffered).expect("thinking-only checkpoint");
+            assert_eq!(cp.resume_uuid, "thinking-final");
+            assert!(cp.pending_tool_ids.is_empty());
+            if streamed {
+                let s = run(&lines, true);
+                assert_eq!(
+                    accumulate(&s),
+                    json!({"content":blocks,"stop_reason":"end_turn"})
+                );
+                assert_eq!(committed(&s), Some(cp));
             }
         }
     }
@@ -511,60 +543,149 @@ fn thinking_only_and_redacted_with_and_without_stream_records() {
 fn model_tool_name_observations() {
     // The docs specify stripping the oc prefix but not rejecting undeclared
     // prefixed calls. These assertions pin translation, not an authorization policy.
-    for (wire,client,checkpoint) in [
-        ("Bash","Bash",false),
-        ("mcp__other__x","mcp__other__x",false),
-        ("mcp__oc__undeclared","undeclared",true),
-        ("mcp__oc__","",true),
-        ("lookup","lookup",true),
+    for (wire, client, checkpoint) in [
+        ("Bash", "Bash", false),
+        ("mcp__other__x", "mcp__other__x", false),
+        ("mcp__oc__undeclared", "undeclared", true),
+        ("mcp__oc__", "", true),
+        ("lookup", "lookup", true),
     ] {
-        let block=json!({"type":"tool_use","id":"tool","name":wire,"input":{}});
-        let expected=json!({"type":"tool_use","id":"tool","name":client,"input":{}});
-        let lines=vec![event(json!({"type":"message_start","message":{"content":[]}})),
+        let block = json!({"type":"tool_use","id":"tool","name":wire,"input":{}});
+        let expected = json!({"type":"tool_use","id":"tool","name":client,"input":{}});
+        let lines = vec![
+            event(json!({"type":"message_start","message":{"content":[]}})),
             event(json!({"type":"content_block_start","index":0,"content_block":block})),
-            hook("name-hook"),event(json!({"type":"content_block_stop","index":0})),
+            hook("name-hook"),
+            event(json!({"type":"content_block_stop","index":0})),
             json!({"type":"assistant","uuid":"tool-record","session_id":"fork","message":{"content":[block]}}),
-            event(json!({"type":"message_delta","delta":{"stop_reason":"tool_use"}})),event(json!({"type":"message_stop"})),
-            json!({"type":"result","subtype":"success","session_id":"fork"})];
-        let b=run(&lines,false);let s=run(&lines,true);
-        assert_eq!(response(&b)["content"],json!([expected]));
-        assert_eq!(accumulate(&s),json!({"content":[expected],"stop_reason":"tool_use"}));
-        assert_eq!(committed(&b).is_some(),checkpoint,"{wire}");
-        let replies:Vec<_>=b.iter().filter_map(|(_,a)|if let Action::WriteStdin(raw)=a {Some(serde_json::from_str::<Value>(raw).unwrap())}else{None}).collect();
-        assert_eq!(replies.len(),1);assert_eq!(replies[0]["response"]["response"]["hookSpecificOutput"]["permissionDecision"],"deny");
+            event(json!({"type":"message_delta","delta":{"stop_reason":"tool_use"}})),
+            event(json!({"type":"message_stop"})),
+            json!({"type":"result","subtype":"success","session_id":"fork"}),
+        ];
+        let b = run(&lines, false);
+        let s = run(&lines, true);
+        assert_eq!(response(&b)["content"], json!([expected]));
+        assert_eq!(
+            accumulate(&s),
+            json!({"content":[expected],"stop_reason":"tool_use"})
+        );
+        assert_eq!(committed(&b).is_some(), checkpoint, "{wire}");
+        let replies: Vec<_> = b
+            .iter()
+            .filter_map(|(_, a)| {
+                if let Action::WriteStdin(raw) = a {
+                    Some(serde_json::from_str::<Value>(raw).unwrap())
+                } else {
+                    None
+                }
+            })
+            .collect();
+        assert_eq!(replies.len(), 1);
+        assert_eq!(
+            replies[0]["response"]["response"]["hookSpecificOutput"]["permissionDecision"],
+            "deny"
+        );
     }
 }
 fn grouped_schedule(group_bits: &[bool], positions: &[u8], assistant_first: bool) {
-    let t=Turn{kinds:vec![1,2,2,2],payload:"🦀".into(),cuts:vec![1,3,7],invalid:0};
-    let (original,expected)=t.build();
-    let mut base:Vec<_>=original.into_iter().filter(|l|l["type"]!="assistant" && l["request"]["subtype"]!="hook_callback").collect();
-    let mut records=vec![];let mut group=vec![];
-    for (i,b) in expected.iter().enumerate() {
-        let mut b=b.clone();if b["type"]=="tool_use" {b["name"]=json!("mcp__oc__lookup");}group.push(b);
-        if i==expected.len()-1||group_bits.get(i).copied().unwrap_or(false) {
-            records.push(json!({"type":"assistant","uuid":format!("group-{i}"),"session_id":"fork","message":{"content":group}}));group.clear();
+    let t = Turn {
+        kinds: vec![1, 2, 2, 2],
+        payload: "🦀".into(),
+        cuts: vec![1, 3, 7],
+        invalid: 0,
+    };
+    let (original, expected) = t.build();
+    let mut base: Vec<_> = original
+        .into_iter()
+        .filter(|l| l["type"] != "assistant" && l["request"]["subtype"] != "hook_callback")
+        .collect();
+    let mut records = vec![];
+    let mut group = vec![];
+    for (i, b) in expected.iter().enumerate() {
+        let mut b = b.clone();
+        if b["type"] == "tool_use" {
+            b["name"] = json!("mcp__oc__lookup");
+        }
+        group.push(b);
+        if i == expected.len() - 1 || group_bits.get(i).copied().unwrap_or(false) {
+            records.push(json!({"type":"assistant","uuid":format!("group-{i}"),"session_id":"fork","message":{"content":group}}));
+            group.clear();
         }
     }
-    let last_uuid=records.last().unwrap()["uuid"].clone();
-    let insert=if assistant_first {0}else{base.len()-1};
-    base.splice(insert..insert,records);
+    let last_uuid = records.last().unwrap()["uuid"].clone();
+    let insert = if assistant_first { 0 } else { base.len() - 1 };
+    base.splice(insert..insert, records);
     // Unique request IDs but duplicated tool IDs; also a never-streamed ID.
     // The same JSON-RPC request retransmitted twice has no specified dedup policy.
-    for (i,p) in positions.iter().enumerate() {
-        let mut h=hook(&format!("scheduled-{i}"));
-        h["request"]["tool_use_id"]=json!(if i%3==0 {"never-streamed"}else{"tool-1"});
-        h["request"]["input"]["tool_use_id"]=h["request"]["tool_use_id"].clone();
-        let at=*p as usize % (base.len()+1);base.insert(at,h);
+    for (i, p) in positions.iter().enumerate() {
+        let mut h = hook(&format!("scheduled-{i}"));
+        h["request"]["tool_use_id"] = json!(if i % 3 == 0 {
+            "never-streamed"
+        } else {
+            "tool-1"
+        });
+        h["request"]["input"]["tool_use_id"] = h["request"]["tool_use_id"].clone();
+        let at = *p as usize % (base.len() + 1);
+        base.insert(at, h);
     }
-    let b=run(&base,false);let s=run(&base,true);
-    assert_eq!(response(&b)["content"],json!(expected));
-    assert_eq!(accumulate(&s),json!({"content":expected,"stop_reason":"tool_use"}));
-    assert_eq!(committed(&b).unwrap().resume_uuid,last_uuid.as_str().unwrap());
-    for (i,line) in base.iter().enumerate().filter(|(_,l)|l["request"]["subtype"]=="hook_callback") {
-        let result=base.iter().position(|l|l["type"]=="result").unwrap();
-        let replies:Vec<_>=b.iter().filter_map(|(at,a)| if let Action::WriteStdin(raw)=a {let v:Value=serde_json::from_str(raw).unwrap();if v["response"]["request_id"]==line["request_id"] {Some((*at,v))}else{None}}else{None}).collect();
+    let b = run(&base, false);
+    let s = run(&base, true);
+    assert_eq!(response(&b)["content"], json!(expected));
+    assert_eq!(
+        accumulate(&s),
+        json!({"content":expected,"stop_reason":"tool_use"})
+    );
+    assert_eq!(
+        committed(&b).unwrap().resume_uuid,
+        last_uuid.as_str().unwrap()
+    );
+    for (i, line) in base
+        .iter()
+        .enumerate()
+        .filter(|(_, l)| l["request"]["subtype"] == "hook_callback")
+    {
+        let result = base.iter().position(|l| l["type"] == "result").unwrap();
+        let replies: Vec<_> = b
+            .iter()
+            .filter_map(|(at, a)| {
+                if let Action::WriteStdin(raw) = a {
+                    let v: Value = serde_json::from_str(raw).unwrap();
+                    if v["response"]["request_id"] == line["request_id"] {
+                        Some((*at, v))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            })
+            .collect();
         // Result begins shutdown; late callbacks are intentionally unhandled.
-        if i>result {assert!(replies.is_empty());}else{assert_eq!(replies.len(),1);assert_eq!(replies[0].1["response"]["response"]["hookSpecificOutput"]["permissionDecision"],"deny");}
+        if i > result {
+            assert!(replies.is_empty());
+        } else {
+            assert_eq!(replies.len(), 1);
+            let start = base
+                .iter()
+                .position(|l| l["event"]["type"] == "message_start")
+                .unwrap();
+            let boundary = base
+                .iter()
+                .position(|l| l["event"]["type"] == "message_delta")
+                .unwrap();
+            assert_eq!(
+                replies[0].0,
+                if i > start && i < boundary {
+                    boundary
+                } else {
+                    i
+                }
+            );
+            assert_eq!(
+                replies[0].1["response"]["response"]["hookSpecificOutput"]["permissionDecision"],
+                "deny"
+            );
+        }
     }
 }
 proptest! {
@@ -575,18 +696,130 @@ proptest! {
 }
 #[test]
 fn interleaved_indexes_reassemble_like_stream() {
-    let lines=vec![
+    let lines = vec![
         event(json!({"type":"message_start","message":{"content":[]}})),
-        event(json!({"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}})),
-        event(json!({"type":"content_block_start","index":1,"content_block":{"type":"text","text":""}})),
-        event(json!({"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"first"}})),
-        event(json!({"type":"content_block_delta","index":1,"delta":{"type":"text_delta","text":"second"}})),
-        event(json!({"type":"content_block_stop","index":1})),event(json!({"type":"content_block_stop","index":0})),
+        event(
+            json!({"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}),
+        ),
+        event(
+            json!({"type":"content_block_start","index":1,"content_block":{"type":"text","text":""}}),
+        ),
+        event(
+            json!({"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"first"}}),
+        ),
+        event(
+            json!({"type":"content_block_delta","index":1,"delta":{"type":"text_delta","text":"second"}}),
+        ),
+        event(json!({"type":"content_block_stop","index":1})),
+        event(json!({"type":"content_block_stop","index":0})),
         json!({"type":"assistant","session_id":"fork","uuid":"final","message":{"content":[{"type":"text","text":"first"},{"type":"text","text":"second"}]}}),
-        event(json!({"type":"message_delta","delta":{"stop_reason":"end_turn"}})),event(json!({"type":"message_stop"})),
-        json!({"type":"result","subtype":"success","session_id":"fork"})];
-    let b=run(&lines,false);let s=run(&lines,true);
-    assert_eq!(accumulate(&s),json!({"content":response(&b)["content"],"stop_reason":response(&b)["stop_reason"]}));
+        event(json!({"type":"message_delta","delta":{"stop_reason":"end_turn"}})),
+        event(json!({"type":"message_stop"})),
+        json!({"type":"result","subtype":"success","session_id":"fork"}),
+    ];
+    let b = run(&lines, false);
+    let s = run(&lines, true);
+    assert_eq!(
+        accumulate(&s),
+        json!({"content":response(&b)["content"],"stop_reason":response(&b)["stop_reason"]})
+    );
+}
+proptest! {
+    #[test]
+    fn interleaved_block_schedules(kinds in prop::collection::vec(0u8..4,2..7), priorities in prop::collection::vec(any::<u8>(),1..20), reverse_stops in any::<bool>()) {
+        let mut lines=vec![event(json!({"type":"message_start","message":{"content":[]}}))];
+        let mut blocks=vec![];let mut deltas=vec![];
+        for (i,kind) in kinds.iter().enumerate() {
+            let (start,end,ds)=match kind {
+                0=>(json!({"type":"text","text":""}),json!({"type":"text","text":"é"}),vec![json!({"type":"text_delta","text":"é"})]),
+                1=>(json!({"type":"thinking","thinking":""}),json!({"type":"thinking","thinking":"reason","signature":"signed"}),vec![json!({"type":"thinking_delta","thinking":"reason"}),json!({"type":"signature_delta","signature":"signed"})]),
+                2=>(json!({"type":"redacted_thinking","data":"opaque"}),json!({"type":"redacted_thinking","data":"opaque"}),vec![]),
+                _=>(json!({"type":"tool_use","id":format!("tool-{i}"),"name":"mcp__oc__lookup","input":{}}),json!({"type":"tool_use","id":format!("tool-{i}"),"name":"lookup","input":{"x":i}}),vec![json!({"type":"input_json_delta","partial_json":format!("{{\"x\":{i}}}")})]),
+            };
+            lines.push(event(json!({"type":"content_block_start","index":i,"content_block":start})));blocks.push(end);deltas.push(ds);
+        }
+        // Every block is open. Select the next available block by generated
+        // priorities while preserving each individual block's delta order.
+        let mut step=0;
+        while deltas.iter().any(|d|!d.is_empty()) {
+            let mut i=priorities[step%priorities.len()] as usize%kinds.len();
+            while deltas[i].is_empty() {i=(i+1)%kinds.len();}
+            let d=deltas[i].remove(0);lines.push(event(json!({"type":"content_block_delta","index":i,"delta":d})));step+=1;
+        }
+        let mut indexes:Vec<usize>=(0..kinds.len()).collect();if reverse_stops {indexes.reverse();}
+        for i in indexes {lines.push(event(json!({"type":"content_block_stop","index":i})));}
+        let mut recorded=blocks.clone();for b in &mut recorded {if b["type"]=="tool_use" {b["name"]=json!("mcp__oc__lookup");}}
+        lines.push(json!({"type":"assistant","session_id":"fork","uuid":"final","message":{"content":recorded}}));
+        lines.push(event(json!({"type":"message_delta","delta":{"stop_reason":"end_turn"}})));lines.push(event(json!({"type":"message_stop"})));
+        lines.push(json!({"type":"result","subtype":"success","session_id":"fork"}));
+        let b=run(&lines,false);let s=run(&lines,true);
+        let reason=if kinds.contains(&3) {"tool_use"}else{"end_turn"};
+        prop_assert_eq!(response(&b)["content"].clone(),json!(blocks));
+        prop_assert_eq!(accumulate(&s),json!({"content":blocks,"stop_reason":reason}));
+        prop_assert_eq!(committed(&s),committed(&b));
+    }
+}
+#[test]
+fn mixed_message_assistant_record_is_suppressed_or_discarded() {
+    for before_second in [false, true] {
+        let mut lines = vec![
+            event(json!({"type":"message_start","message":{"id":"first","content":[]}})),
+            event(
+                json!({"type":"content_block_start","index":0,"content_block":{"type":"text","text":"first"}}),
+            ),
+            event(json!({"type":"content_block_stop","index":0})),
+        ];
+        let record = json!({"type":"assistant","session_id":"fork","uuid":"mixed","message":{"content":[{"type":"text","text":"first"},{"type":"text","text":"second"}]}});
+        if before_second {
+            lines.push(record.clone());
+        }
+        lines.push(event(
+            json!({"type":"message_start","message":{"id":"second","content":[]}}),
+        ));
+        if !before_second {
+            lines.push(record);
+        }
+        lines.push(event(json!({"type":"content_block_start","index":0,"content_block":{"type":"text","text":"second"}})));
+        lines.push(json!({"type":"result","subtype":"success","session_id":"fork"}));
+        let b = run(&lines, false);
+        assert_eq!(
+            response(&b)["content"],
+            json!([{"type":"text","text":"first"}])
+        );
+        assert!(committed(&b).is_none());
+    }
+}
+#[test]
+fn declared_name_with_prefix_is_unwrapped_exactly_once() {
+    for (wire, client) in [("mcp__oc__mcp__oc__x", "mcp__oc__x"), ("mcp__oc__x", "x")] {
+        let b = json!({"type":"tool_use","id":"tool","name":wire,"input":{}});
+        let lines = vec![
+            event(json!({"type":"message_start","message":{"content":[]}})),
+            event(json!({"type":"content_block_start","index":0,"content_block":b})),
+            event(json!({"type":"content_block_stop","index":0})),
+            json!({"type":"assistant","uuid":"final","session_id":"fork","message":{"content":[b]}}),
+            event(json!({"type":"message_delta","delta":{"stop_reason":"tool_use"}})),
+            json!({"type":"result","subtype":"success","session_id":"fork"}),
+        ];
+        let mut r = request(false, initial());
+        r.tools[0]["name"] = json!("mcp__oc__x");
+        let actions = run_request(&lines, r);
+        assert_eq!(response(&actions)["content"][0]["name"], client);
+        assert!(committed(&actions).is_some());
+    }
+}
+#[test]
+fn exhaustive_group_and_hook_boundaries() {
+    // Eight contiguous partitions, before/after records, and every insertion
+    // position through and beyond result (including duplicate and unknown IDs).
+    for mask in 0u8..8 {
+        let bits: Vec<_> = (0..3).map(|bit| mask & (1 << bit) != 0).collect();
+        for first in [false, true] {
+            for position in 0u8..48 {
+                grouped_schedule(&bits, &[position, position, position], first);
+            }
+        }
+    }
 }
 #[test]
 fn coverage_census() {
