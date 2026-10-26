@@ -14,6 +14,7 @@ cargo fmt --all
 cargo test --workspace
 cargo test -p clod --features test-support
 cargo clippy --workspace --all-targets -- -D warnings
+cargo clippy --workspace --all-targets --features clod/test-support -- -D warnings
 python3 -I scripts/polytoken-harness/test_harness.py
 python3 -I scripts/test-cache-recorder.py
 node scripts/test-upstream.mjs

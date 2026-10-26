@@ -86,6 +86,10 @@ fn main() {
     );
     if script.grandchild {
         // Inherit the CLI's process group, as an MCP/tool subprocess would.
+        #[allow(
+            clippy::zombie_processes,
+            reason = "parked descendant must outlive its parent to test clod process-group cleanup; integration test verifies termination"
+        )]
         let child = std::process::Command::new(env::current_exe().unwrap())
             .arg("--grandchild")
             .spawn()

@@ -80,13 +80,19 @@ fn runtime_shutdown_kills_cli_process_group() {
     let survived = unsafe { libc::kill(descendant, 0) } == 0;
     if survived {
         // Clean only this test's recorded descendant after verifying executable identity.
-        let output = std::process::Command::new("ps")
-            .args(["-p", &descendant.to_string(), "-o", "comm="])
+        let identity_matches = std::process::Command::new("ps")
+            .args(["-p", &descendant.to_string(), "-o", "args="])
             .output()
-            .unwrap();
-        assert_eq!(String::from_utf8(output.stdout).unwrap().trim(), binary);
-        unsafe {
-            libc::kill(descendant, libc::SIGKILL);
+            .ok()
+            .filter(|output| output.status.success())
+            .and_then(|output| String::from_utf8(output.stdout).ok())
+            .is_some_and(|args| args.split_whitespace().next() == Some(binary));
+        if identity_matches && unsafe { libc::getpgid(descendant) } == leader {
+            unsafe {
+                libc::kill(descendant, libc::SIGKILL);
+            }
+        } else {
+            eprintln!("refusing cleanup of PID {descendant}: executable/group identity changed");
         }
     }
     assert!(
