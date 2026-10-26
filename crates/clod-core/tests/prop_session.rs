@@ -341,6 +341,28 @@ proptest! {
     }
 }
 #[test]
+fn calibration_reproductions() {
+    // Eviction must retain the newly committed entry, not the old one.
+    run_map(1, &[Op::Insert(0, 0), Op::Apply(Some(1), 0, 0)]);
+    // Keep preserves contents and recency, observable through the next eviction.
+    run_map(
+        2,
+        &[
+            Op::Insert(0, 0),
+            Op::Insert(1, 1),
+            Op::Apply(Some(0), 1, 0),
+            Op::Insert(2, 2),
+        ],
+    );
+    // One pending call, duplicated result; and two valid results in reverse order.
+    planner_case(1, 2, 0, false, String::new());
+    planner_case(2, 0, 1, true, String::new());
+    let a = base();
+    let mut b = a.clone();
+    b.model = "another-model".into();
+    assert_ne!(session::key(&a), session::key(&b));
+}
+#[test]
 fn bounded_map_sequences() {
     let alphabet = [
         Op::Insert(0, 1),
