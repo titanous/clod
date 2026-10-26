@@ -104,12 +104,18 @@ pub fn key_with_mode(request: &Request, _mode: KeyMode) -> Option<SessionKey> {
             .and_then(Value::as_str)
             .cmp(&b.get("name").and_then(Value::as_str))
     });
-    // System content has transport annotations; tool definitions are arbitrary
-    // JSON data. Cleaning schemas would erase parameters named cache_control or
-    // defaults whose content happens to resemble thinking blocks.
+    // Only a tool object's top-level cache_control is a transport annotation.
+    // Nested schema/default data must remain fully significant.
+    for tool in &mut tools {
+        if let Value::Object(object) = tool {
+            object.remove("cache_control");
+        }
+    }
     let system =
         serde_json::to_value(&request.system).expect("content serialization is infallible");
-    let components = json!([id, request.model, clean(&system, true), tools]);
+    // The renderer uses text from every accepted system block, regardless of
+    // its type. Do not omit thinking-shaped entries from this array.
+    let components = json!([id, request.model, clean(&system, false), tools]);
     Some(
         Sha256::digest(
             serde_json::to_vec(&components).expect("JSON Value serialization is infallible"),
