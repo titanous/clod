@@ -9,3 +9,6 @@ serde = { version = "1", default-features = false, features = ["alloc", "derive"
 serde_json = { version = "1", default-features = false, features = ["alloc"] }
 sha2 = { version = "0.10", default-features = false }
 thiserror = { version = "2", default-features = false }
+
+[dev-dependencies]
+proptest = "1.12.0"
