@@ -146,7 +146,31 @@ where
         Err(e) => Err(e.into()),
     }
 }
+/// Shell process ownership shared with the synchronous shutdown path.
+#[derive(Clone, Default)]
+pub struct ProcessGroups(Arc<Mutex<GroupState>>);
+#[derive(Default)]
+struct GroupState {
+    stopping: bool,
+    live: std::collections::HashSet<i32>,
+}
+impl ProcessGroups {
+    /// Close spawning and kill groups before waiting for runtime workers. No
+    /// filesystem, tracing or other potentially blocking I/O runs under this lock.
+    pub fn shutdown(&self) {
+        let mut groups = self.0.lock().unwrap();
+        groups.stopping = true;
+        for &group in &groups.live {
+            // SAFETY: spawn/reap/drop serialize with this lock; these leaders
+            // remain unreaped and therefore reserve their process-group IDs.
+            unsafe {
+                libc::killpg(group, libc::SIGKILL);
+            }
+        }
+    }
+}
 struct Shared {
+    groups: ProcessGroups,
     settings: Settings,
     map: Mutex<SessionMap>,
     locks: Mutex<HashMap<SessionKey, Weak<AsyncMutex<()>>>>,
@@ -159,7 +183,11 @@ impl Shared {
     }
 }
 pub fn router(settings: Settings) -> Router {
+    router_with_groups(settings, ProcessGroups::default())
+}
+pub fn router_with_groups(settings: Settings, groups: ProcessGroups) -> Router {
     let shared = Arc::new(Shared {
+        groups,
         map: Mutex::new(SessionMap::new(settings.session_cap)),
         locks: Mutex::new(HashMap::new()),
         permits: Arc::new(Semaphore::new(settings.max_concurrent)),
@@ -242,6 +270,7 @@ async fn messages(
 }
 type BodySender = mpsc::UnboundedSender<Result<Bytes, Infallible>>;
 struct Process {
+    groups: ProcessGroups,
     child: Child,
     group: i32,
     stdin: Option<mpsc::UnboundedSender<String>>,
@@ -257,7 +286,7 @@ struct Process {
     group_signals: Option<usize>,
 }
 impl Process {
-    fn spawn(spec: clod_core::spawn::SpawnSpec) -> io::Result<Self> {
+    fn spawn(spec: clod_core::spawn::SpawnSpec, groups: ProcessGroups) -> io::Result<Self> {
         let mut command = Command::new(spec.program);
         command
             .args(spec.args)
@@ -280,7 +309,18 @@ impl Process {
         for name in spec.env_remove {
             command.env_remove(name);
         }
+        let mut registered = groups.0.lock().unwrap();
+        if registered.stopping {
+            return Err(io::Error::new(
+                io::ErrorKind::Interrupted,
+                "server stopping",
+            ));
+        }
         let mut child = command.spawn()?;
+        registered
+            .live
+            .insert(child.id().expect("new child has a PID") as i32);
+        drop(registered);
         let stdout = BufReader::new(child.stdout.take().unwrap()).lines();
         let stderr = BufReader::new(child.stderr.take().unwrap()).lines();
         let mut child_stdin = child.stdin.take().unwrap();
@@ -295,6 +335,7 @@ impl Process {
             }
         });
         Ok(Self {
+            groups,
             group: child.id().expect("new child has a PID") as i32,
             child,
             stdin: Some(stdin),
@@ -309,6 +350,27 @@ impl Process {
             #[cfg(test)]
             group_signals: None,
         })
+    }
+    async fn wait(
+        child: &mut Child,
+        group: i32,
+        groups: &ProcessGroups,
+    ) -> io::Result<std::process::ExitStatus> {
+        std::future::poll_fn(|cx| {
+            let mut registered = groups.0.lock().unwrap();
+            let result = std::future::Future::poll(std::pin::pin!(child.wait()).as_mut(), cx);
+            if result.is_ready() && child.id().is_none() {
+                // No await or external I/O between reap, removal and the one
+                // immediate descendant kill. Shutdown cannot see a reaped PGID.
+                registered.live.remove(&group);
+                // SAFETY: immediate post-reap cleanup, serialized with shutdown.
+                unsafe {
+                    libc::killpg(group, libc::SIGKILL);
+                }
+            }
+            result
+        })
+        .await
     }
     fn kill(&mut self) {
         if self.child.id().is_some() {
@@ -333,6 +395,9 @@ impl Process {
 }
 impl Drop for Process {
     fn drop(&mut self) {
+        let groups = self.groups.clone();
+        let mut registered = groups.0.lock().unwrap();
+        registered.live.remove(&self.group);
         if self.child.id().is_some() {
             // Until wait reaps our child, its PID (even as a zombie) reserves the
             // group ID. After reaping, skip this to avoid signalling a reused PGID.
@@ -397,9 +462,19 @@ async fn run(
                     measure(
                         serde_json::json!({"kind":"spawn","request":measurement_id,"attempt":cli_attempt,"plan":if source.is_some() {"resume"} else {"fresh"},"key_mode":format!("{:?}",shared.settings.core.session_key),"source_session_id":source}),
                     );
-                    match Process::spawn(spec) {
+                    match Process::spawn(spec, shared.groups.clone()) {
                         Ok(child) => {
                             process = Some(child);
+                            #[cfg(feature = "test-support")]
+                            if let Some(marker) = env::var_os("CLOD_TEST_BLOCK_WORKER") {
+                                // Test-only synchronous stall while this runner
+                                // owns a registered CLI. Runtime task cancellation
+                                // cannot drop it; shutdown must kill via registry.
+                                std::fs::write(marker, b"blocked").unwrap();
+                                loop {
+                                    std::thread::park();
+                                }
+                            }
                             vec![]
                         }
                         Err(e) => exchange.on_spawn_failed(&e.to_string(), now),
@@ -548,9 +623,9 @@ async fn run(
             Some(error) = p.stdin_errors.recv() => {
                 actions.extend(exchange.on_stdin_failed(&error, shared.now()));
             }
-            status = p.child.wait(), if p.exit.is_none() => {
+            status = Process::wait(&mut p.child, p.group, &p.groups), if p.exit.is_none() => {
                 p.exit = Some(status.ok().and_then(|s| s.code()).unwrap_or(-1));
-                p.kill_group();
+                p.killed.get_or_insert_with(Instant::now);
             }
         }
     }
@@ -561,14 +636,39 @@ mod process_tests {
     use super::*;
 
     #[tokio::test]
-    async fn reaped_child_ignores_later_group_kills() {
-        let mut process = Process::spawn(clod_core::spawn::SpawnSpec {
+    async fn registry_removes_reaped_groups_and_closes_spawning() {
+        let groups = ProcessGroups::default();
+        let spec = clod_core::spawn::SpawnSpec {
             program: "/usr/bin/true".into(),
             args: vec![],
             env_set: vec![],
             env_remove: vec![],
             working_directory: std::env::temp_dir().to_str().unwrap().into(),
-        })
+        };
+        let mut process = Process::spawn(spec.clone(), groups.clone()).unwrap();
+        assert!(groups.0.lock().unwrap().live.contains(&process.group));
+        Process::wait(&mut process.child, process.group, &process.groups)
+            .await
+            .unwrap();
+        assert!(groups.0.lock().unwrap().live.is_empty());
+        groups.shutdown();
+        assert!(
+            matches!(Process::spawn(spec, groups), Err(error) if error.kind() == io::ErrorKind::Interrupted)
+        );
+    }
+
+    #[tokio::test]
+    async fn reaped_child_ignores_later_group_kills() {
+        let mut process = Process::spawn(
+            clod_core::spawn::SpawnSpec {
+                program: "/usr/bin/true".into(),
+                args: vec![],
+                env_set: vec![],
+                env_remove: vec![],
+                working_directory: std::env::temp_dir().to_str().unwrap().into(),
+            },
+            ProcessGroups::default(),
+        )
         .unwrap();
         // Intercept signals rather than risk signalling an unrelated reused PGID.
         // This isolates the boundary even when a descendant holds a pipe open.

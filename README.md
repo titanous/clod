@@ -43,7 +43,9 @@ Endpoints: `POST /v1/messages`, `GET /health`, and a static `GET /v1/models` stu
 
 ### Shutdown
 
-SIGTERM and SIGINT stop accepting connections and exit promptly with status 143 and 130, respectively. Shutdown does **not** drain requests: in-flight responses may be cut off. All request runners are cancelled, and each live CLI's process group is killed with SIGKILL, including descendants that ignore stdin EOF. Cleanup never signals a previously reaped CLI's group, whose ID could have been reused. Repeated signals during shutdown do not bypass cleanup.
+SIGTERM, SIGINT and SIGHUP stop accepting connections and exit with status 143, 130 and 129, respectively. These statuses follow the `128 + signal` convention; clod returns an exit code rather than re-raising the signal. SIGQUIT retains its default disposition, including core-dump semantics.
+
+Shutdown does **not** drain requests: in-flight responses may be cut off. Before waiting for runtime workers, clod prevents new CLI spawns and SIGKILLs each unreaped CLI's process group, including descendants that ignore stdin EOF. Spawn, reap and group cleanup are serialized so cleanup never signals a previously reaped CLI's group, whose ID could have been reused. Runtime teardown then waits at most three seconds for workers; a worker blocked in synchronous measurement or logging I/O cannot indefinitely delay exit or skip group cleanup. Further SIGTERM/SIGINT/SIGHUP signals during this bounded wait remain handled and do not bypass cleanup or extend the deadline.
 
 ### Point Polytoken at clod
 

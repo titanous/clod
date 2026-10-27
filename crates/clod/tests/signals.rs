@@ -71,6 +71,9 @@ impl Drop for Server {
     }
 }
 fn shutdown(signal_number: i32, live: bool, repeated: bool) {
+    shutdown_with_stall(signal_number, live, repeated, false);
+}
+fn shutdown_with_stall(signal_number: i32, live: bool, repeated: bool, stalled: bool) {
     let dir = tempfile::tempdir().unwrap();
     let scenario = dir.path().join("scenario.json");
     fs::write(
@@ -78,7 +81,14 @@ fn shutdown(signal_number: i32, live: bool, repeated: bool) {
         json!({"fresh":{"no_stdin":true,"grandchild":true}}).to_string(),
     )
     .unwrap();
-    let child = Command::new(env!("CARGO_BIN_EXE_clod"))
+    let marker = dir.path().join("blocked");
+    let mut command = Command::new(env!("CARGO_BIN_EXE_clod"));
+    if stalled {
+        command.env("CLOD_TEST_BLOCK_WORKER", &marker);
+    } else {
+        command.env_remove("CLOD_TEST_BLOCK_WORKER");
+    }
+    let child = command
         .env("CLOD_LISTEN", "127.0.0.1:0")
         .env("CLOD_WORKDIR", dir.path().join("workdir"))
         .env("CLOD_CLAUDE_BIN", env!("CARGO_BIN_EXE_fake-claude"))
@@ -119,11 +129,19 @@ fn shutdown(signal_number: i32, live: bool, repeated: bool) {
             "leader and grandchild must publish PIDs"
         );
     }
-    signal(
+    if stalled {
+        let deadline = Instant::now() + Duration::from_secs(5);
+        while !marker.exists() && Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        assert!(marker.exists(), "runner must be synchronously blocked");
+    }
+    let started = Instant::now();
+    assert!(signal(
         server.child.id() as i32,
         env!("CARGO_BIN_EXE_clod"),
         signal_number,
-    );
+    ));
     if repeated && server.child.try_wait().unwrap().is_none() {
         // Keep a second registered signal pending without introducing a timing sleep.
         signal(
@@ -132,7 +150,7 @@ fn shutdown(signal_number: i32, live: bool, repeated: bool) {
             signal_number,
         );
     }
-    let deadline = Instant::now() + Duration::from_secs(3);
+    let deadline = Instant::now() + Duration::from_secs(if stalled { 6 } else { 3 });
     let status = loop {
         if let Some(status) = server.child.try_wait().unwrap() {
             break status;
@@ -149,10 +167,24 @@ fn shutdown(signal_number: i32, live: bool, repeated: bool) {
         server.pids()
     );
     assert_eq!(status.code(), Some(128 + signal_number));
+    if stalled {
+        assert!(
+            started.elapsed() >= Duration::from_millis(2800),
+            "must exercise shutdown timeout, not ordinary worker cancellation"
+        );
+    }
 }
 #[test]
 fn sigterm_kills_cli_group() {
     shutdown(libc::SIGTERM, true, false);
+}
+#[test]
+fn sighup_kills_cli_group() {
+    shutdown(libc::SIGHUP, true, false);
+}
+#[test]
+fn blocked_worker_shutdown_is_bounded_and_kills_cli_group() {
+    shutdown_with_stall(libc::SIGTERM, true, true, true);
 }
 #[test]
 fn sigint_kills_cli_group() {
