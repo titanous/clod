@@ -279,6 +279,8 @@ fn replay_text_is_not_an_injective_transport() {
         ),
         message("user", vec![json!({"type":"text","text":"next"})]),
     ];
+    // Role framing stays plain text (above), but since fix/replay-delimiter
+    // historical content can no longer close the envelope early.
     let rendered = serde_json::to_string(&replay::render(&crafted)).unwrap();
-    assert_eq!(rendered.matches("</conversation_history>").count(), 2);
+    assert_eq!(rendered.matches("</conversation_history>").count(), 1);
 }
