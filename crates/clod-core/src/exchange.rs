@@ -74,6 +74,7 @@ pub struct Exchange {
     input_fragments: alloc::collections::BTreeMap<String, String>,
     message: Value,
     terminal: Value,
+    assistant_stop_reason: Option<String>,
     counter: u64,
 }
 impl Exchange {
@@ -136,7 +137,8 @@ impl Exchange {
             streamed_content: vec![],
             input_fragments: alloc::collections::BTreeMap::new(),
             message: Value::Null,
-            terminal: json!({"type":"message_delta","delta":{"stop_reason":"end_turn","stop_sequence":null},"usage":{"output_tokens":0}}),
+            terminal: json!({"type":"message_delta","delta":{"stop_reason":null,"stop_sequence":null},"usage":{"output_tokens":0}}),
+            assistant_stop_reason: None,
             counter: 0,
         };
         let invalid = this.request.tools.iter().find_map(|t| {
@@ -400,6 +402,7 @@ impl Exchange {
                     self.session_id = id;
                 }
                 self.uuid = a.uuid.clone();
+                self.assistant_stop_reason = a.message["stop_reason"].as_str().map(String::from);
                 let mut tools = false;
                 if let Some(blocks) = a.message["content"].as_array() {
                     for mut block in blocks.clone() {
@@ -537,9 +540,17 @@ impl Exchange {
                     } else {
                         MapEffect::Discard
                     });
-                    if tools {
-                        self.terminal["delta"]["stop_reason"] = json!("tool_use");
-                    }
+                    // Preserve the forwarded-tool override and resolve missing CLI
+                    // reasons once for both JSON and streaming terminal responses.
+                    let stop_reason = if tools {
+                        "tool_use"
+                    } else {
+                        self.terminal["delta"]["stop_reason"]
+                            .as_str()
+                            .or(self.assistant_stop_reason.as_deref())
+                            .unwrap_or("end_turn")
+                    };
+                    self.terminal["delta"]["stop_reason"] = json!(stop_reason);
                     let mut actions = vec![];
                     if !self.gone {
                         if self.request.stream {
