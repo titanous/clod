@@ -155,10 +155,17 @@ struct GroupState {
     live: std::collections::HashSet<i32>,
 }
 impl ProcessGroups {
+    /// The registry stays usable after a panic elsewhere: cleanup in Drop and
+    /// shutdown must still run rather than panic on a poisoned lock.
+    fn state(&self) -> std::sync::MutexGuard<'_, GroupState> {
+        self.0
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
     /// Close spawning and kill groups before waiting for runtime workers. No
     /// filesystem, tracing or other potentially blocking I/O runs under this lock.
     pub fn shutdown(&self) {
-        let mut groups = self.0.lock().unwrap();
+        let mut groups = self.state();
         groups.stopping = true;
         for &group in &groups.live {
             // SAFETY: spawn/reap/drop serialize with this lock; these leaders
@@ -309,7 +316,7 @@ impl Process {
         for name in spec.env_remove {
             command.env_remove(name);
         }
-        let mut registered = groups.0.lock().unwrap();
+        let mut registered = groups.state();
         if registered.stopping {
             return Err(io::Error::new(
                 io::ErrorKind::Interrupted,
@@ -357,7 +364,7 @@ impl Process {
         groups: &ProcessGroups,
     ) -> io::Result<std::process::ExitStatus> {
         std::future::poll_fn(|cx| {
-            let mut registered = groups.0.lock().unwrap();
+            let mut registered = groups.state();
             let result = std::future::Future::poll(std::pin::pin!(child.wait()).as_mut(), cx);
             if result.is_ready() && child.id().is_none() {
                 // No await or external I/O between reap, removal and the one
@@ -377,8 +384,8 @@ impl Process {
             self.kill_group();
         }
     }
-    // Only the wait arm may call this immediately after reaping, with no await
-    // in between. All later cleanup must use kill(), since the PGID may be reused.
+    // Only for an unreaped child: call it through kill(). The one post-reap
+    // group kill happens inside Process::wait, under the registry lock.
     fn kill_group(&mut self) {
         // SAFETY: this is our unreaped child's group, or immediate reap cleanup.
         #[cfg(test)]
@@ -396,7 +403,7 @@ impl Process {
 impl Drop for Process {
     fn drop(&mut self) {
         let groups = self.groups.clone();
-        let mut registered = groups.0.lock().unwrap();
+        let mut registered = groups.state();
         registered.live.remove(&self.group);
         if self.child.id().is_some() {
             // Until wait reaps our child, its PID (even as a zombie) reserves the
@@ -675,12 +682,10 @@ mod process_tests {
         process.group_signals = Some(0);
         process.child.wait().await.unwrap();
         assert!(process.child.id().is_none());
-        process.kill_group(); // immediate cleanup in the wait arm
-        assert_eq!(process.group_signals, Some(1));
         process.kill(); // later timeout action while EOF is outstanding
         assert_eq!(
             process.group_signals,
-            Some(1),
+            Some(0),
             "post-reap timeout must not signal a reusable group ID"
         );
     }
