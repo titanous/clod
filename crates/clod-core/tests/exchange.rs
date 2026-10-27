@@ -805,6 +805,76 @@ fn captured_tool_input_deltas_identical_and_checkpoint_resumes() {
     map.insert(session::key(&r).unwrap(), cp.clone());
     assert!(matches!(session::plan(&r, &map), session::Plan::Resume(_)));
 }
+#[test]
+fn normalized_assistant_input_does_not_replace_streamed_input() {
+    for stream in [false, true] {
+        for with_events in [false, true] {
+            let mut r = request(stream);
+            r.tools = vec![
+                json!({"name":"collect","input_schema":{"type":"object","properties":{"items":{"type":"array","items":{"type":"string"}}}}}),
+            ];
+            let (mut e, _) =
+                Exchange::new(r.clone(), &SessionMap::default(), Config::new("/empty"), 0);
+            let raw = json!({"items":"[\"a\"]"});
+            let normalized = json!({"items":["a"]});
+            let mut actions = vec![];
+            if with_events {
+                actions.extend(begin(&mut e));
+                actions.extend(event(&mut e, json!({"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"call","name":"mcp__oc__collect","input":{}}})));
+                let delta = json!({"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":raw.to_string()}});
+                let emitted = event(&mut e, delta.clone());
+                if stream {
+                    assert!(emitted
+                        .iter()
+                        .any(|a| matches!(a, Action::Emit(ev) if ev.data == delta)));
+                } else {
+                    assert!(!emitted.iter().any(|a| matches!(a, Action::Emit(_))));
+                }
+                actions.extend(emitted);
+            }
+            actions.extend(out(&mut e, json!({"type":"assistant","uuid":"normalized","session_id":"fork","message":{"content":[{"type":"tool_use","id":"call","name":"mcp__oc__collect","input":normalized}]}})));
+            if with_events {
+                actions.extend(event(
+                    &mut e,
+                    json!({"type":"content_block_stop","index":0}),
+                ));
+                actions.extend(event(
+                    &mut e,
+                    json!({"type":"message_delta","delta":{"stop_reason":"tool_use"}}),
+                ));
+            }
+            actions.extend(success(&mut e));
+            actions.extend(reap(&mut e));
+            let MapEffect::Commit(cp) = effect(&actions) else {
+                panic!("expected checkpoint: stream={stream}, with_events={with_events}")
+            };
+            let expected = if with_events { &raw } else { &normalized };
+            if !stream {
+                let body = actions
+                    .iter()
+                    .find_map(|a| match a {
+                        Action::RespondJson(200, body) => Some(body),
+                        _ => None,
+                    })
+                    .unwrap();
+                assert_eq!(&body["content"][0]["input"], expected);
+            }
+            r.messages.push(serde_json::from_value(json!({"role":"assistant","content":[{"type":"tool_use","id":"call","name":"collect","input":expected}]})).unwrap());
+            r.messages.push(serde_json::from_value(json!({"role":"user","content":[{"type":"tool_result","tool_use_id":"call","content":"ok"}]})).unwrap());
+            let mut map = SessionMap::default();
+            map.insert(session::key(&r).unwrap(), cp.clone());
+            assert!(matches!(session::plan(&r, &map), session::Plan::Resume(_)));
+            let opposite = if with_events { &normalized } else { &raw };
+            let mut altered = r.clone();
+            altered.messages[1] = serde_json::from_value(json!({"role":"assistant","content":[{"type":"tool_use","id":"call","name":"collect","input":opposite}]})).unwrap();
+            assert!(matches!(
+                session::fresh_reason(&altered, &map, session::KeyMode::Strict),
+                Some(session::FreshReason::PrefixMismatch { .. })
+            ));
+        }
+    }
+}
+
 fn e_request_messages_from_fixture() -> Vec<clod_core::request::Message> {
     include_str!("fixtures/b-tool.ndjson")
         .lines()
