@@ -34,19 +34,72 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 
 /// Measurement-only sink: never receives the CLI initialization/account payload.
 fn measure(value: serde_json::Value) {
-    use std::io::Write;
     if let Some(path) = env::var_os("CLOD_MEASURE_LOG") {
-        match std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            Ok(mut file) => {
-                if let Err(error) = writeln!(file, "{value}") {
-                    tracing::error!(%error, "measurement write failed");
-                }
-            }
-            Err(error) => tracing::error!(%error, "measurement open failed"),
+        if let Err(error) = append_record(std::path::Path::new(&path), &value) {
+            tracing::error!(%error, "measurement write failed");
+        }
+    }
+}
+/// Append one JSON line. The record is serialized in full first and written
+/// with a single `write_all` on an append-mode file while holding a
+/// process-wide lock, so concurrent requests never interleave partial lines.
+/// The file is reopened per record so external truncation or rotation of the
+/// path behaves as before.
+fn append_record(path: &std::path::Path, value: &serde_json::Value) -> io::Result<()> {
+    use std::io::Write;
+    static LOCK: Mutex<()> = Mutex::new(());
+    let mut line = serde_json::to_vec(value)?;
+    line.push(b'\n');
+    let _guard = LOCK
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)?
+        .write_all(&line)
+}
+/// Short prefix of the session key hash for correlating log lines. The full
+/// key is only written to measurement records.
+fn key_label(key: &SessionKey) -> String {
+    key[..6].iter().map(|byte| format!("{byte:02x}")).collect()
+}
+fn fresh_label(reason: Option<&session::FreshReason>) -> &'static str {
+    use session::FreshReason::*;
+    match reason {
+        None => "none",
+        Some(NoKey) => "no_key",
+        Some(NoCheckpoint) => "no_checkpoint",
+        Some(InvalidCheckpoint) => "invalid_checkpoint",
+        Some(NotSingleUserTail) => "not_single_user_tail",
+        Some(PrefixMismatch { .. }) => "prefix_mismatch",
+        Some(PendingMismatch) => "pending_mismatch",
+        Some(TextWithPending) => "text_with_pending",
+    }
+}
+fn effect_label(effect: &session::MapEffect) -> &'static str {
+    match effect {
+        session::MapEffect::Commit(_) => "commit",
+        session::MapEffect::Keep => "keep",
+        session::MapEffect::Discard => "discard",
+    }
+}
+/// Numeric token counts from a CLI usage object; absent fields count as zero.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct UsageCounts {
+    input: u64,
+    output: u64,
+    cache_read: u64,
+    cache_creation: u64,
+}
+impl UsageCounts {
+    fn from_json(usage: &serde_json::Value) -> Self {
+        let count = |name: &str| usage.get(name).and_then(|v| v.as_u64()).unwrap_or(0);
+        Self {
+            input: count("input_tokens"),
+            output: count("output_tokens"),
+            cache_read: count("cache_read_input_tokens"),
+            cache_creation: count("cache_creation_input_tokens"),
         }
     }
 }
@@ -270,7 +323,15 @@ async fn messages(
     };
     let (response_tx, response_rx) = oneshot::channel();
     let (body_tx, body_rx) = mpsc::unbounded_channel();
-    tokio::spawn(run(shared, request, response_tx, body_tx, body_rx));
+    // One ID per accepted request: the `request` field in measurement records
+    // and the `id` of the log span, so both can be correlated.
+    static NEXT_REQUEST: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+    let id = NEXT_REQUEST.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let span = tracing::info_span!("request", id);
+    tokio::spawn(tracing::Instrument::instrument(
+        run(shared, request, id, response_tx, body_tx, body_rx),
+        span,
+    ));
     response_rx
         .await
         .unwrap_or_else(|_| error(500, "api_error", "Request runner stopped"))
@@ -416,10 +477,20 @@ impl Drop for Process {
 async fn run(
     shared: Arc<Shared>,
     request: Request,
+    measurement_id: u64,
     response: oneshot::Sender<Response>,
     body: BodySender,
     receiver: mpsc::UnboundedReceiver<Result<Bytes, Infallible>>,
 ) {
+    let started = Instant::now();
+    // Shape only: never log prompt, tool or account contents.
+    tracing::info!(
+        model = %request.model,
+        stream = request.stream,
+        messages = request.messages.len(),
+        tools = request.tools.len(),
+        "request received"
+    );
     let key = session::key_with_mode(&request, shared.settings.core.session_key);
     let lock = key.map(|key| {
         let mut locks = shared.locks.lock().unwrap();
@@ -441,13 +512,20 @@ async fn run(
             map.touch(&key);
         }
         let reason = session::fresh_reason(&request, &map, shared.settings.core.session_key);
-        tracing::debug!(?key, ?reason, "session planning");
+        tracing::info!(
+            session = key.as_ref().map(key_label).as_deref().unwrap_or("none"),
+            fresh_reason = fresh_label(reason.as_ref()),
+            queued_ms = started.elapsed().as_millis() as u64,
+            "session planned"
+        );
         measure(serde_json::json!({"kind":"decision","key":key,"reason":format!("{reason:?}")}));
         Exchange::new(request, &map, shared.settings.core.clone(), shared.now())
     };
-    static NEXT_MEASUREMENT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
-    let measurement_id = NEXT_MEASUREMENT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let mut cli_attempt = 0_u64;
+    // Usage from the latest attempt's `result` record: the CLI's final total
+    // for the turn. Streaming usage records are partial and never summed.
+    let mut result_usage: Option<UsageCounts> = None;
+    let mut http_status: Option<u16> = None;
     let mut actions: VecDeque<_> = actions.into();
     let mut process: Option<Process> = None;
     let mut body = Some(body);
@@ -466,8 +544,16 @@ async fn run(
                         .windows(2)
                         .find(|w| w[0] == "--resume")
                         .map(|w| w[1].clone());
+                    let plan = if source.is_some() { "resume" } else { "fresh" };
+                    result_usage = None;
+                    tracing::info!(
+                        attempt = cli_attempt,
+                        plan,
+                        resume_session = source.as_deref(),
+                        "spawning CLI"
+                    );
                     measure(
-                        serde_json::json!({"kind":"spawn","request":measurement_id,"attempt":cli_attempt,"plan":if source.is_some() {"resume"} else {"fresh"},"key_mode":format!("{:?}",shared.settings.core.session_key),"source_session_id":source}),
+                        serde_json::json!({"kind":"spawn","request":measurement_id,"attempt":cli_attempt,"plan":plan,"key_mode":format!("{:?}",shared.settings.core.session_key),"source_session_id":source}),
                     );
                     match Process::spawn(spec, shared.groups.clone()) {
                         Ok(child) => {
@@ -484,7 +570,10 @@ async fn run(
                             }
                             vec![]
                         }
-                        Err(e) => exchange.on_spawn_failed(&e.to_string(), now),
+                        Err(e) => {
+                            tracing::warn!(attempt = cli_attempt, error = %e, "CLI spawn failed");
+                            exchange.on_spawn_failed(&e.to_string(), now)
+                        }
                     }
                 }
                 Action::WriteStdin(mut line) => {
@@ -514,6 +603,7 @@ async fn run(
                 }
                 Action::StartSse => {
                     if let (Some(tx), Some(rx)) = (response.take(), receiver.take()) {
+                        http_status = Some(200);
                         let reply = Response::builder()
                             .header("content-type", "text/event-stream")
                             .header("cache-control", "no-cache")
@@ -540,6 +630,7 @@ async fn run(
                 }
                 Action::RespondJson(status, value) => {
                     if let (Some(tx), Some(rx)) = (response.take(), receiver.take()) {
+                        http_status = Some(status);
                         let reply = Response::builder()
                             .status(status)
                             .header("content-type", "application/json")
@@ -562,9 +653,23 @@ async fn run(
                 }
                 Action::Done(final_state) => {
                     let reason = exchange.checkpoint_reason();
-                    tracing::debug!(effect=?final_state.map_effect, ?reason, "session effect");
                     measure(
                         serde_json::json!({"kind":"effect","request":measurement_id,"key":final_state.key,"effect":format!("{:?}",final_state.map_effect),"reason":reason}),
+                    );
+                    // Logged after the last measurement record for this request.
+                    let usage = result_usage;
+                    tracing::info!(
+                        status = http_status,
+                        attempts = cli_attempt,
+                        effect = effect_label(&final_state.map_effect),
+                        checkpoint_reason = reason,
+                        client_gone = gone,
+                        elapsed_ms = started.elapsed().as_millis() as u64,
+                        input_tokens = usage.map(|u| u.input),
+                        output_tokens = usage.map(|u| u.output),
+                        cache_read_input_tokens = usage.map(|u| u.cache_read),
+                        cache_creation_input_tokens = usage.map(|u| u.cache_creation),
+                        "request finished"
                     );
                     session::apply(&mut shared.map.lock().unwrap(), final_state);
                     drop(guard);
@@ -588,6 +693,7 @@ async fn run(
             if p.stdout_eof && p.stderr_eof {
                 if let Some(code) = p.exit.take() {
                     process = None;
+                    tracing::info!(attempt = cli_attempt, code, "CLI exited");
                     actions.extend(exchange.on_exit(code, shared.now()));
                     continue;
                 }
@@ -613,6 +719,9 @@ async fn run(
                             let event = if value["type"] == "stream_event" { &value["event"] } else { &value };
                             let usage = if event["type"] == "message_start" { event["message"].get("usage") } else if event["type"] == "message_delta" || event["type"] == "result" { event.get("usage") } else { None };
                             if let Some(usage) = usage {
+                                if event["type"] == "result" {
+                                    result_usage = Some(UsageCounts::from_json(usage));
+                                }
                                 measure(serde_json::json!({"kind":"usage","request":measurement_id,"attempt":cli_attempt,"event":event["type"],"session_id":value.get("session_id"),"usage":usage}));
                             }
                         }
@@ -635,6 +744,81 @@ async fn run(
                 p.killed.get_or_insert_with(Instant::now);
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod logging_tests {
+    use super::*;
+
+    #[test]
+    fn concurrent_measurement_records_never_interleave() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("measure.ndjson");
+        // Large records span many formatter writes; each must land whole.
+        let threads: Vec<_> = (0..8)
+            .map(|thread| {
+                let path = path.clone();
+                std::thread::spawn(move || {
+                    for index in 0..50 {
+                        let value = serde_json::json!({"kind":"usage","thread":thread,"index":index,"pad":"x".repeat(8192)});
+                        append_record(&path, &value).unwrap();
+                    }
+                })
+            })
+            .collect();
+        for thread in threads {
+            thread.join().unwrap();
+        }
+        let text = std::fs::read_to_string(&path).unwrap();
+        let lines: Vec<_> = text.lines().collect();
+        assert_eq!(lines.len(), 400);
+        for line in lines {
+            let value: serde_json::Value = serde_json::from_str(line).unwrap();
+            assert_eq!(value["pad"].as_str().unwrap().len(), 8192);
+        }
+    }
+
+    #[test]
+    fn record_format_matches_display() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("measure.ndjson");
+        let value = serde_json::json!({"kind":"decision","key":[1,2],"reason":"None"});
+        append_record(&path, &value).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            format!("{value}\n")
+        );
+    }
+
+    #[test]
+    fn usage_counts_and_labels() {
+        let usage = serde_json::json!({"input_tokens":2,"output_tokens":4,"cache_read_input_tokens":7,"cache_creation_input_tokens":1067,"cache_creation":{"ephemeral_1h_input_tokens":1067}});
+        assert_eq!(
+            UsageCounts::from_json(&usage),
+            UsageCounts {
+                input: 2,
+                output: 4,
+                cache_read: 7,
+                cache_creation: 1067
+            }
+        );
+        assert_eq!(
+            UsageCounts::from_json(&serde_json::json!({})),
+            UsageCounts::default()
+        );
+        let mut key = [0_u8; 32];
+        key[0] = 0xab;
+        key[5] = 0x01;
+        assert_eq!(key_label(&key), "ab0000000001");
+        assert_eq!(
+            fresh_label(Some(&session::FreshReason::PrefixMismatch {
+                expected: key,
+                actual: key
+            })),
+            "prefix_mismatch"
+        );
+        assert_eq!(effect_label(&session::MapEffect::Keep), "keep");
     }
 }
 

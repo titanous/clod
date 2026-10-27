@@ -31,7 +31,8 @@ All settings are environment variables. Defaults come from `crates/clod/src/lib.
 | `CLOD_PING_MS` | `15000` | SSE ping interval in milliseconds. |
 | `CLOD_HOLD_IDLE_MS` | `60000` | Idle backstop for held tool hooks; firing invalidates checkpoint. |
 | `CLOD_TURN_TIMEOUT_MS` | `900000` | Turn timeout in milliseconds. |
-| `CLOD_MEASURE_LOG` | unset | Append decision/effect and numeric usage measurement records to this path. |
+| `CLOD_MEASURE_LOG` | unset | Append decision/effect and numeric usage measurement records to this path, one complete JSON line per record (concurrent requests do not interleave). |
+| `RUST_LOG` | `info` | Log filter for diagnostics on stderr, e.g. `debug` or `clod=debug`. |
 | `CLOD_UPSTREAM_BASE_URL` | unset | Measurement-only CLI traffic redirection; must be HTTP on `127.0.0.1`, `localhost` or `[::1]` (optional port), otherwise startup fails. |
 | `CLOD_SESSION_KEY` | unsupported | Any value is rejected: strict session keys are mandatory. |
 
@@ -40,6 +41,12 @@ Do not set `CLAUDE_CONFIG_DIR`; clod removes credential overrides from the child
 Requests carrying **any Origin header**, even `null` or localhost, get a 403 Anthropic error envelope. Host is required and must be `localhost`, `127.0.0.1` or `[::1]`, optionally with a numeric port, unless `CLOD_ALLOW_ANY_HOST=1`. This is a local-service protection, not a CORS endpoint. The working directory must also be outside every git repository, including parent directories with a `.git` file or folder.
 
 Endpoints: `POST /v1/messages`, `GET /health`, and a static `GET /v1/models` stub advertising `claude-sonnet-4-6`. The model list is **not** CLI capability discovery; requests may select other CLI-supported models. Other paths return 404. Response bodies finish once the core emits the terminal response, while process cleanup and the per-conversation lock remain active until Done.
+
+### Logging
+
+Diagnostics go to stderr at `info` by default (colour only on a terminal, and never with a non-empty `NO_COLOR`). Stdout carries a single `listening address=<host:port>` line once the listener is bound, for supervisors and scripts that discover the port.
+
+Each request's records are in a `request{id=N}` span; `N` matches the `request` field of `CLOD_MEASURE_LOG` records. At `info` a request logs `request received` (model, stream flag, message and tool counts), `session planned` (a 12-hex-digit prefix of the session key and why a fresh session would be needed, if it would), `spawning CLI` and `CLI exited` for each attempt (fresh or resume, and the resumed CLI session ID), then `request finished` with HTTP status, attempts, checkpoint effect and reason, elapsed time and the token counts from the final attempt's CLI `result` record: `input_tokens`, `output_tokens`, `cache_read_input_tokens` and `cache_creation_input_tokens`. These counts are omitted when the attempt produced no `result`. Streaming usage records are not summed. Prompt, tool and account contents are not logged; CLI stderr lines are logged at `debug` only.
 
 ### Shutdown
 
