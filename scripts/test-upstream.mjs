@@ -19,6 +19,11 @@ try{
  assert.equal(response.status,200);assert.equal(response.headers['content-encoding'],'gzip');
  assert.deepEqual(response.body,gzip);assert.deepEqual(zlib.gunzipSync(response.body),fixture);
  const record=JSON.parse(fs.readFileSync(path.join(root,'capture.ndjson'),'utf8').trim());assert.equal(record.cli_run,'abcdef');assert.equal(record.line.path,'/v1/messages');
+ const records=fs.readFileSync(path.join(root,'capture.ndjson.responses.ndjson'),'utf8').trim().split('\n').map(JSON.parse);
+ assert.ok(records.every(r=>r.request_id===record.request_id&&r.cli_run==='abcdef'));
+ assert.equal(records[0].kind,'response_start');assert.equal(records[0].status,200);assert.equal(records[0].headers['content-encoding'],'gzip');
+ assert.deepEqual(Buffer.concat(records.filter(r=>r.kind==='response_chunk').map(r=>Buffer.from(r.bytes_base64,'base64'))),gzip);
+ assert.equal(records.at(-1).kind,'response_end');assert.equal(records.at(-1).complete,true);assert.equal(records.at(-1).truncated,false);assert.equal(records.at(-1).received_bytes,gzip.length);
  assert.equal((await request()).status,503);assert.equal(limited,true);
  console.log('PASS: chunked gzip SSE bytes/encoding preserved; run prefix removed; request ceiling enforced');
 }finally{proxy.closeAllConnections();upstream.closeAllConnections();await new Promise(r=>proxy.close(r));await new Promise(r=>upstream.close(r));fs.rmSync(root,{recursive:true});}
