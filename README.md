@@ -41,6 +41,10 @@ Requests carrying **any Origin header**, even `null` or localhost, get a 403 Ant
 
 Endpoints: `POST /v1/messages`, `GET /health`, and a static `GET /v1/models` stub advertising `claude-sonnet-4-6`. The model list is **not** CLI capability discovery; requests may select other CLI-supported models. Other paths return 404. Response bodies finish once the core emits the terminal response, while process cleanup and the per-conversation lock remain active until Done.
 
+### Shutdown
+
+SIGTERM and SIGINT stop accepting connections and exit promptly with status 143 and 130, respectively. Shutdown does **not** drain requests: in-flight responses may be cut off. All request runners are cancelled, and each live CLI's process group is killed with SIGKILL, including descendants that ignore stdin EOF. Cleanup never signals a previously reaped CLI's group, whose ID could have been reused. Repeated signals during shutdown do not bypass cleanup.
+
 ### Point Polytoken at clod
 
 Adapt the provider/model configuration used by the [Polytoken harness](docs/polytoken-harness.md):
