@@ -70,7 +70,7 @@ Match the key to `CLOD_API_KEY`, and select a CLI-supported model.
 
 ## What the model sees
 
-The model sees Polytoken's system prompt and client tools exposed as `mcp__oc__<name>`, not Claude Code's normal built-in tools. Fresh replay adds a fixed provenance note. This is **not an injection-free replacement transport**: accepted Phase 0 captures also show a CLI billing metadata line, Agent SDK identity, a `# Environment` system message (working directory/platform/date/model and instructions), and an account email reminder in the first user message. See [the exact capture and limitations](docs/protocol.md).
+The model sees Polytoken's system prompt and client tools exposed as `mcp__oc__<name>`, not Claude Code's normal built-in tools. Tool calls are forwarded as the model emitted them, minus the `mcp__oc__` prefix, even when the name was not declared (as the Anthropic API does); the CLI never executes them, and Polytoken answers unknown tools with an error result the model can recover from. Fresh replay adds a fixed provenance note. This is **not an injection-free replacement transport**: accepted Phase 0 captures also show a CLI billing metadata line, Agent SDK identity, a `# Environment` system message (working directory/platform/date/model and instructions), and an account email reminder in the first user message. See [the exact capture and limitations](docs/protocol.md).
 
 ## Resume and caching
 
