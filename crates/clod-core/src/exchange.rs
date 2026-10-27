@@ -66,6 +66,11 @@ pub struct Exchange {
     prefixed_call: bool,
     multiple_messages: bool,
     last_assistant_has_tool: bool,
+    /// The CLI wrote a tool_result of its own during this turn.
+    cli_tool_result: bool,
+    /// A forwarded call was recorded after a CLI tool_result, so that result
+    /// is an ancestor of the record a checkpoint would resume at.
+    result_before_tool: bool,
     done_count: u8,
     streamed: BTreeSet<String>,
     recorded: BTreeSet<String>,
@@ -131,6 +136,8 @@ impl Exchange {
             prefixed_call: false,
             multiple_messages: false,
             last_assistant_has_tool: false,
+            cli_tool_result: false,
+            result_before_tool: false,
             done_count: 0,
             streamed: BTreeSet::new(),
             recorded: BTreeSet::new(),
@@ -446,6 +453,7 @@ impl Exchange {
                 }
                 self.last_assistant_has_tool = tools;
                 if tools {
+                    self.result_before_tool |= self.cli_tool_result;
                     self.tool_uuid = a.uuid;
                 }
                 if !self.events {
@@ -455,6 +463,20 @@ impl Exchange {
                 } else {
                     vec![]
                 }
+            }
+            // The CLI answers a bare tool name it does not have with its own
+            // `No such tool available` result while the message still streams;
+            // it parents the next tool record of the same message to that result.
+            Record::Unknown(v)
+                if self.shutdown.is_none()
+                    && !self.multiple_messages
+                    && v["type"] == "user"
+                    && v["message"]["content"].as_array().is_some_and(|blocks| {
+                        blocks.iter().any(|b| b["type"] == "tool_result")
+                    }) =>
+            {
+                self.cli_tool_result = true;
+                vec![]
             }
             Record::System(v) => {
                 if let Some(id) = v["session_id"].as_str() {
@@ -514,6 +536,8 @@ impl Exchange {
                         Some("MultipleMessages")
                     } else if self.bare_call && self.prefixed_call {
                         Some("MixedBareAndPrefixedToolCalls")
+                    } else if self.result_before_tool {
+                        Some("ToolResultBeforeLastToolCall")
                     } else if tools && !self.last_assistant_has_tool && self.tool_uuid.is_some() {
                         Some("TrailingContentAfterTool")
                     } else if !inputs_valid {
