@@ -415,6 +415,42 @@ impl Exchange {
                 actions
             }
             Record::Assistant(a) if self.shutdown.is_none() => {
+                if a.is_api_error_message || a.error.is_some() || a.api_error.is_some() {
+                    let rate_limit =
+                        matches!(a.error.as_deref(), Some("rate_limit" | "rate_limit_error"))
+                            || matches!(
+                                a.api_error.as_deref(),
+                                Some("usage_limit_reached" | "rate_limit" | "rate_limit_error")
+                            );
+                    let text = a.message["content"]
+                        .as_array()
+                        .map(|blocks| {
+                            blocks
+                                .iter()
+                                .filter(|b| b["type"] == "text")
+                                .filter_map(|b| b["text"].as_str())
+                                .collect::<Vec<_>>()
+                                .join("\n")
+                        })
+                        .filter(|text| !text.is_empty())
+                        .unwrap_or_else(|| {
+                            a.api_error
+                                .or(a.error)
+                                .unwrap_or_else(|| "CLI API error".into())
+                        });
+                    self.checkpoint_reason = Some("AssistantApiError");
+                    if self.bare_call {
+                        self.effect = Some(MapEffect::Discard);
+                    }
+                    let (status, kind) = if rate_limit {
+                        (429, "rate_limit_error")
+                    } else {
+                        (500, "api_error")
+                    };
+                    let mut actions = self.error(status, kind, &text);
+                    actions.extend(self.close(now, 5000, true));
+                    return actions;
+                }
                 if self.multiple_messages {
                     return vec![];
                 }
@@ -495,7 +531,13 @@ impl Exchange {
                 if let Some(id) = r.session_id {
                     self.session_id = id;
                 }
-                let text = r.errors.join("\n");
+                let text = if r.errors.is_empty() && (r.is_error || r.subtype != "success") {
+                    r.result
+                        .clone()
+                        .unwrap_or_else(|| "CLI returned an error".into())
+                } else {
+                    r.errors.join("\n")
+                };
                 if is_stale(&text)
                     || (matches!(self.plan, Plan::Resume(_))
                         && (r.subtype == "invalid_request_error"
@@ -504,7 +546,7 @@ impl Exchange {
                     return self.refusal(now);
                 }
                 let tools = !self.streamed.is_empty() || !self.recorded.is_empty();
-                if r.subtype == "success"
+                if (r.subtype == "success" && !r.is_error)
                     || (r.subtype == "error_max_turns" && tools && self.boundary)
                 {
                     let uuid = if tools {

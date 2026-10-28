@@ -238,9 +238,14 @@ fn fixtures_parse() {
         "f-missing-session",
         "f-missing-uuid",
     ] {
-        let (mut e, _) = captured(name, true);
+        let (mut e, actions) = captured(name, true);
         let a = reap(&mut e);
-        if !name.starts_with('f') {
+        if name == "e-image" {
+            // The capture contains an explicit media_removed API error before
+            // a later success; it must not checkpoint that failed exchange.
+            assert_eq!(effect(&a), &MapEffect::Keep);
+            assert!(status(&actions, 500));
+        } else if !name.starts_with('f') {
             assert!(matches!(effect(&a), MapEffect::Commit(_)), "{name}");
         }
     }

@@ -18,10 +18,18 @@ pub struct Assistant {
     #[serde(default)]
     pub session_id: Option<String>,
     pub message: Value,
+    #[serde(default)]
+    pub error: Option<String>,
+    #[serde(default, rename = "isApiErrorMessage", alias = "is_api_error_message")]
+    pub is_api_error_message: bool,
+    #[serde(default, rename = "apiError", alias = "api_error")]
+    pub api_error: Option<String>,
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ResultRecord {
     pub subtype: String,
+    #[serde(default)]
+    pub is_error: bool,
     #[serde(default)]
     pub session_id: Option<String>,
     #[serde(default)]
