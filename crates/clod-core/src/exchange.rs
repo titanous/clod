@@ -71,6 +71,8 @@ pub struct Exchange {
     /// A forwarded call was recorded after a CLI tool_result, so that result
     /// is an ancestor of the record a checkpoint would resume at.
     result_before_tool: bool,
+    media_removed: bool,
+    media_dimension_limit: bool,
     done_count: u8,
     streamed: BTreeSet<String>,
     recorded: BTreeSet<String>,
@@ -138,6 +140,8 @@ impl Exchange {
             last_assistant_has_tool: false,
             cli_tool_result: false,
             result_before_tool: false,
+            media_removed: false,
+            media_dimension_limit: false,
             done_count: 0,
             streamed: BTreeSet::new(),
             recorded: BTreeSet::new(),
@@ -233,6 +237,10 @@ impl Exchange {
         if self.bare_call && self.prefixed_call {
             self.effect = Some(MapEffect::Discard);
             self.checkpoint_reason = Some("MixedBareAndPrefixedToolCalls");
+        }
+        if self.media_removed {
+            self.effect = Some(MapEffect::Discard);
+            self.checkpoint_reason = Some("MediaRemoved");
         }
         self.done_count += 1;
         debug_assert_eq!(self.done_count, 1, "exactly one Done per exchange");
@@ -415,6 +423,16 @@ impl Exchange {
                 actions
             }
             Record::Assistant(a) if self.shutdown.is_none() => {
+                if a.api_error.as_deref() == Some("media_removed") {
+                    // The CLI retries internally after replacing rejected media.
+                    // Do not forward its synthetic notice or interrupt that recovery.
+                    self.media_removed = true;
+                    self.media_dimension_limit |= a.api_error_params["media"] == "image"
+                        && a.error_details.to_string().contains("At least one of the image dimensions exceed max allowed size for many-image requests: 3000 pixels");
+                    self.effect = Some(MapEffect::Discard);
+                    self.checkpoint_reason = Some("MediaRemoved");
+                    return vec![];
+                }
                 if a.is_api_error_message || a.error.is_some() || a.api_error.is_some() {
                     let rate_limit =
                         matches!(a.error.as_deref(), Some("rate_limit" | "rate_limit_error"))
@@ -574,7 +592,9 @@ impl Exchange {
                         }
                         self.content = self.streamed_content.clone();
                     }
-                    self.checkpoint_reason = if self.multiple_messages {
+                    self.checkpoint_reason = if self.media_removed {
+                        Some("MediaRemoved")
+                    } else if self.multiple_messages {
                         Some("MultipleMessages")
                     } else if self.bare_call && self.prefixed_call {
                         Some("MixedBareAndPrefixedToolCalls")
@@ -630,6 +650,16 @@ impl Exchange {
                             .unwrap_or("end_turn")
                     };
                     self.terminal["delta"]["stop_reason"] = json!(stop_reason);
+                    let media_note = self.media_removed.then_some({
+                        if self.media_dimension_limit {
+                            "An image was removed because it exceeded the provider’s size limits. In conversations with many images, either dimension must be at most 3000 pixels. Resize or crop it if needed."
+                        } else {
+                            "The provider could not process an image or document, so it was removed. Try a different format or a smaller version if needed."
+                        }
+                    });
+                    if let Some(note) = media_note {
+                        self.content.push(json!({"type":"text","text":note}));
+                    }
                     let mut actions = vec![];
                     if !self.gone {
                         if self.request.stream {
@@ -637,6 +667,16 @@ impl Exchange {
                                 self.sse = true;
                                 self.committed = true;
                                 actions.push(Action::StartSse);
+                            }
+                            if let Some(note) = media_note {
+                                let index =
+                                    self.content_indexes.keys().next_back().map_or(0, |i| i + 1);
+                                actions.push(Action::Emit(SseEvent::new("content_block_start", json!({"type":"content_block_start","index":index,"content_block":{"type":"text","text":""}}))));
+                                actions.push(Action::Emit(SseEvent::new("content_block_delta", json!({"type":"content_block_delta","index":index,"delta":{"type":"text_delta","text":note}}))));
+                                actions.push(Action::Emit(SseEvent::new(
+                                    "content_block_stop",
+                                    json!({"type":"content_block_stop","index":index}),
+                                )));
                             }
                             actions.push(Action::Emit(SseEvent::new(
                                 "message_delta",
@@ -683,6 +723,7 @@ impl Exchange {
         self.stale = true;
         self.effect = Some(MapEffect::Discard);
         let retry = matches!(self.plan, Plan::Resume(_))
+            && !self.media_removed
             && !self.retried
             && !self.committed
             && !self.gone
@@ -720,6 +761,7 @@ impl Exchange {
             return vec![];
         }
         if self.stale
+            && !self.media_removed
             && !self.retried
             && matches!(self.plan, Plan::Resume(_))
             && !self.committed

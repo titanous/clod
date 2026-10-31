@@ -24,6 +24,10 @@ pub struct Assistant {
     pub is_api_error_message: bool,
     #[serde(default, rename = "apiError", alias = "api_error")]
     pub api_error: Option<String>,
+    #[serde(default, rename = "apiErrorParams", alias = "api_error_params")]
+    pub api_error_params: Value,
+    #[serde(default, rename = "errorDetails", alias = "error_details")]
+    pub error_details: Value,
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ResultRecord {

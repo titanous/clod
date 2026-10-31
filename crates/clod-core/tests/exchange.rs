@@ -241,13 +241,30 @@ fn fixtures_parse() {
         let (mut e, actions) = captured(name, true);
         let a = reap(&mut e);
         if name == "e-image" {
-            // The capture contains an explicit media_removed API error before
-            // a later success; it must not checkpoint that failed exchange.
-            assert_eq!(effect(&a), &MapEffect::Keep);
-            assert!(status(&actions, 500));
+            // The CLI removed the image and recovered with an explanatory answer.
+            assert_eq!(effect(&a), &MapEffect::Discard);
+            assert!(!status(&actions, 500));
+            assert_eq!(emits(&actions, "message_stop"), 1);
         } else if !name.starts_with('f') {
             assert!(matches!(effect(&a), MapEffect::Commit(_)), "{name}");
         }
+    }
+}
+#[test]
+fn captured_image_rejection_recovers_with_explanation() {
+    for stream in [false, true] {
+        let (mut e, actions) = captured("e-image", stream);
+        assert!(!status(&actions, 500));
+        assert_eq!(emits(&actions, "error"), 0);
+        assert!(!format!("{actions:?}").contains("API Error: an image in the conversation"));
+        if stream {
+            assert_eq!(emits(&actions, "message_start"), 1);
+            assert_eq!(emits(&actions, "message_stop"), 1);
+        } else {
+            assert!(actions.iter().any(|a| matches!(a, Action::RespondJson(200, body) if body["content"].as_array().unwrap().iter().any(|b| b["text"].as_str().is_some_and(|text| text.contains("API rejected it as unprocessable"))))));
+        }
+        assert_eq!(effect(&reap(&mut e)), &MapEffect::Discard);
+        assert_eq!(e.checkpoint_reason(), Some("MediaRemoved"));
     }
 }
 #[test]

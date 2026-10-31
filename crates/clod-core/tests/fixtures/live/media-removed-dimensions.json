@@ -1,0 +1,17 @@
+{
+  "provenance": {
+    "source": "Sanitized fields reported by the separate production forensics investigation; not a complete CLI record or a new live capture.",
+    "cli_version": "2.1.314",
+    "limitations": "The referenced image blob was absent. Other examined 1170x4200 PNGs had valid checksums and decompressed; no exact offending image hash is established. The request-specific many-image limit is not a universal per-image limit."
+  },
+  "errorDetails": {
+    "status": 400,
+    "message": "messages.5.content.5.image.source.base64.data: At least one of the image dimensions exceed max allowed size for many-image requests: 3000 pixels"
+  },
+  "apiError": "media_removed",
+  "apiErrorParams": {
+    "media": "image",
+    "media_reason": "unprocessable",
+    "healsDistinctCarrier": true
+  }
+}
