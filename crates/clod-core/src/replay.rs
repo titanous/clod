@@ -77,7 +77,7 @@ fn user_content(content: &Content, output: &mut Vec<Value>, buffer: &mut String)
         }
     }
 }
-fn turn(message: &Message) -> Vec<Value> {
+fn turn(message: &Message, registry: Option<&crate::name_alignment::Registry>) -> Vec<Value> {
     let mut output = Vec::new();
     let mut buffer = String::new();
     if message.role == "assistant" {
@@ -96,7 +96,8 @@ fn turn(message: &Message) -> Vec<Value> {
                             }
                             let call = Call {
                                 id: &block["id"],
-                                name: &block["name"],
+                                name: registry
+                                    .map_or(&block["name"], |r| r.wire_name(&block["name"])),
                                 input: &block["input"],
                             };
                             append(
@@ -159,6 +160,14 @@ fn neutralize_history_close(value: &str) -> String {
 /// Render one atomic user input. Text-only turns occupy one block each; media
 /// splits a turn only where needed to retain real image blocks in source order.
 pub fn render(messages: &[Message]) -> Vec<Value> {
+    render_with_registry(messages, None)
+}
+
+/// Map only canonical assistant call names for transport; never mutate messages.
+pub fn render_with_registry(
+    messages: &[Message],
+    registry: Option<&crate::name_alignment::Registry>,
+) -> Vec<Value> {
     let boundary = messages
         .iter()
         .rposition(|message| message.role == "assistant")
@@ -167,7 +176,7 @@ pub fn render(messages: &[Message]) -> Vec<Value> {
     let framed = boundary > 0 && boundary < messages.len();
     let mut output = Vec::new();
     for (index, message) in messages.iter().enumerate() {
-        let mut blocks = turn(message);
+        let mut blocks = turn(message, registry);
         if framed && index < boundary {
             for block in &mut blocks {
                 if block["type"] == "text" {

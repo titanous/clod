@@ -3,6 +3,9 @@ use std::process::Command;
 fn unsafe_startup_settings_are_rejected() {
     for (name, value, expected) in [
         ("CLOD_API_KEY", "", "must not be empty"),
+        ("CLOD_ALIGN_TOOL_NAMES", "0", "must be 1"),
+        ("CLOD_ALIGN_TOOL_NAMES", "true", "must be 1"),
+        ("CLOD_ALIGN_TOOL_NAMES", "", "must be 1"),
         (
             "CLOD_UPSTREAM_BASE_URL",
             "https://example.com",
@@ -17,6 +20,7 @@ fn unsafe_startup_settings_are_rejected() {
         let dir = tempfile::tempdir().unwrap();
         let output = Command::new(env!("CARGO_BIN_EXE_clod"))
             .env_remove("CLOD_SESSION_KEY")
+            .env_remove("CLOD_ALIGN_TOOL_NAMES")
             .env_remove("CLOD_UPSTREAM_BASE_URL")
             .env_remove("CLOD_API_KEY")
             .env("CLOD_WORKDIR", dir.path())

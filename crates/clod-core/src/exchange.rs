@@ -177,7 +177,7 @@ impl Exchange {
     }
     fn start(&mut self) -> Vec<Action> {
         let spec = spawn::spec(&self.request, &self.plan, &self.config);
-        let prompt = spawn::system_prompt(&self.request, &self.plan);
+        let prompt = spawn::configured_system_prompt(&self.request, &self.plan, &self.config);
         let id = self.id();
         let init = protocol::control(
             &id,
@@ -197,7 +197,16 @@ impl Exchange {
                     })
                     .collect(),
             ),
-            Plan::Fresh => Value::Array(replay::render(&self.request.messages)),
+            Plan::Fresh => {
+                let registry = self
+                    .config
+                    .align_tool_names
+                    .then(|| crate::name_alignment::Registry::new(&self.request.tools));
+                Value::Array(replay::render_with_registry(
+                    &self.request.messages,
+                    registry.as_ref(),
+                ))
+            }
         };
         vec![Action::Spawn(spec),Action::WriteStdin(init),Action::WriteStdin(json!({"type":"user","message":{"role":"user","content":content},"parent_tool_use_id":null,"session_id":""}).to_string())]
     }

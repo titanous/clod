@@ -22,6 +22,9 @@ pub struct SpawnSpec {
 #[derive(Clone, Debug)]
 pub struct Config {
     pub program: String,
+    /// Experimental transport name instructions and Fresh replay presentation.
+    /// Keep fixed for the lifetime of a process/session store.
+    pub align_tool_names: bool,
     /// Fixed, empty, non-git directory. Never derived from request content.
     pub working_directory: String,
     pub is_root: bool,
@@ -36,6 +39,7 @@ impl Config {
     pub fn new(working_directory: impl Into<String>) -> Self {
         Self {
             program: "claude".into(),
+            align_tool_names: false,
             working_directory: working_directory.into(),
             is_root: false,
             session_key: crate::session::KeyMode::Strict,
@@ -57,6 +61,13 @@ pub fn system_prompt(request: &Request, plan: &Plan) -> String {
     };
     if matches!(plan, Plan::Fresh) {
         text.push_str(replay::PROVENANCE_NOTE);
+    }
+    text
+}
+pub fn configured_system_prompt(request: &Request, plan: &Plan, config: &Config) -> String {
+    let mut text = system_prompt(request, plan);
+    if config.align_tool_names {
+        text.push_str(&crate::name_alignment::Registry::new(&request.tools).instruction());
     }
     text
 }

@@ -143,6 +143,19 @@ impl Settings {
         if env::var_os("CLOD_SESSION_KEY").is_some() {
             return Err("CLOD_SESSION_KEY was removed; strict session keys are mandatory".into());
         }
+        core.align_tool_names = match env::var_os("CLOD_ALIGN_TOOL_NAMES") {
+            None => false,
+            Some(value) if value == "1" => true,
+            Some(_) => {
+                return Err(
+                    "CLOD_ALIGN_TOOL_NAMES must be 1 when set (unset disables the experiment)"
+                        .into(),
+                )
+            }
+        };
+        if core.align_tool_names {
+            tracing::warn!("experimental transport tool-name alignment enabled; use a new process with an empty session store");
+        }
         core.upstream_base_url = env::var("CLOD_UPSTREAM_BASE_URL").ok();
         if core
             .upstream_base_url

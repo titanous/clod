@@ -59,6 +59,26 @@ fn fixture(name: &str) -> String {
         env!("CARGO_MANIFEST_DIR")
     )
 }
+#[tokio::test]
+async fn tool_name_alignment_environment_opt_in_reaches_fake_cli() {
+    for enabled in [false, true] {
+        let server = Server::start_aligned(text(), None, false, false, enabled).await;
+        assert!(server
+            .post(&request(false))
+            .send()
+            .await
+            .unwrap()
+            .status()
+            .is_success());
+        let logs = server.logs();
+        let encoded = serde_json::to_string(&logs).unwrap();
+        assert_eq!(encoded.contains("clod-tool-names"), enabled);
+        if enabled {
+            assert!(encoded.contains("mcp__oc__lookup"));
+            assert!(encoded.contains("not the original execution names"));
+        }
+    }
+}
 fn text() -> Value {
     json!({"fixture":fixture("a-text"),"eof":true})
 }
@@ -67,6 +87,15 @@ fn request(stream: bool) -> Value {
 }
 impl Server {
     async fn start(fresh: Value, resume: Option<Value>, auth: bool, bad_bin: bool) -> Self {
+        Self::start_aligned(fresh, resume, auth, bad_bin, false).await
+    }
+    async fn start_aligned(
+        fresh: Value,
+        resume: Option<Value>,
+        auth: bool,
+        bad_bin: bool,
+        aligned: bool,
+    ) -> Self {
         static BUILD: std::sync::Once = std::sync::Once::new();
         BUILD.call_once(|| {
             assert!(std::process::Command::new(env!("CARGO"))
@@ -119,6 +148,10 @@ impl Server {
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())
             .kill_on_drop(true);
+        cmd.env_remove("CLOD_ALIGN_TOOL_NAMES");
+        if aligned {
+            cmd.env("CLOD_ALIGN_TOOL_NAMES", "1");
+        }
         if auth {
             cmd.env("CLOD_API_KEY", "secret");
         }
