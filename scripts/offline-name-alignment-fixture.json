@@ -1,0 +1,418 @@
+{
+  "provenance": "Derived locally from specified production lines and CLI internal request-shape records; no provider response capture; not a complete sanitized prompt or generation fixture.",
+  "batches": [
+    {
+      "line": 706,
+      "calls": [
+        {
+          "type": "tool_use",
+          "id": "batch706-0",
+          "name": "todo_create",
+          "input": {
+            "title": "<redacted>",
+            "description": "<redacted>"
+          }
+        },
+        {
+          "type": "tool_use",
+          "id": "batch706-1",
+          "name": "todo_create",
+          "input": {
+            "title": "<redacted>",
+            "description": "<redacted>"
+          }
+        },
+        {
+          "type": "tool_use",
+          "id": "batch706-2",
+          "name": "todo_create",
+          "input": {
+            "title": "<redacted>",
+            "description": "<redacted>"
+          }
+        },
+        {
+          "type": "tool_use",
+          "id": "batch706-3",
+          "name": "todo_create",
+          "input": {
+            "title": "<redacted>",
+            "description": "<redacted>"
+          }
+        },
+        {
+          "type": "tool_use",
+          "id": "batch706-4",
+          "name": "todo_create",
+          "input": {
+            "title": "<redacted>",
+            "description": "<redacted>"
+          }
+        }
+      ]
+    },
+    {
+      "line": 713,
+      "calls": [
+        {
+          "type": "tool_use",
+          "id": "batch713-0",
+          "name": "shell_exec",
+          "input": {
+            "command": "<redacted>",
+            "timeout_seconds": "<redacted>"
+          }
+        },
+        {
+          "type": "tool_use",
+          "id": "batch713-1",
+          "name": "file_read",
+          "input": {
+            "path": "<redacted>",
+            "offset": "<redacted>",
+            "limit": "<redacted>"
+          }
+        },
+        {
+          "type": "tool_use",
+          "id": "batch713-2",
+          "name": "file_read",
+          "input": {
+            "path": "<redacted>",
+            "offset": "<redacted>",
+            "limit": "<redacted>"
+          }
+        }
+      ]
+    },
+    {
+      "line": 716,
+      "calls": [
+        {
+          "type": "tool_use",
+          "id": "batch716-0",
+          "name": "grep",
+          "input": {
+            "pattern": "<redacted>",
+            "path": "<redacted>"
+          }
+        },
+        {
+          "type": "tool_use",
+          "id": "batch716-1",
+          "name": "grep",
+          "input": {
+            "pattern": "<redacted>",
+            "path": "<redacted>"
+          }
+        },
+        {
+          "type": "tool_use",
+          "id": "batch716-2",
+          "name": "grep",
+          "input": {
+            "pattern": "<redacted>",
+            "path": "<redacted>",
+            "max_results": "<redacted>"
+          }
+        }
+      ]
+    },
+    {
+      "line": 718,
+      "calls": [
+        {
+          "type": "tool_use",
+          "id": "batch718-0",
+          "name": "file_read",
+          "input": {
+            "path": "<redacted>",
+            "offset": "<redacted>",
+            "limit": "<redacted>"
+          }
+        },
+        {
+          "type": "tool_use",
+          "id": "batch718-1",
+          "name": "file_read",
+          "input": {
+            "path": "<redacted>",
+            "offset": "<redacted>",
+            "limit": "<redacted>"
+          }
+        },
+        {
+          "type": "tool_use",
+          "id": "batch718-2",
+          "name": "file_read",
+          "input": {
+            "path": "<redacted>",
+            "offset": "<redacted>",
+            "limit": "<redacted>"
+          }
+        }
+      ]
+    },
+    {
+      "line": 720,
+      "calls": [
+        {
+          "type": "tool_use",
+          "id": "batch720-0",
+          "name": "grep",
+          "input": {
+            "path": "<redacted>",
+            "pattern": "<redacted>"
+          }
+        },
+        {
+          "type": "tool_use",
+          "id": "batch720-1",
+          "name": "grep",
+          "input": {
+            "path": "<redacted>",
+            "pattern": "<redacted>",
+            "include": "<redacted>",
+            "context_lines": "<redacted>"
+          }
+        }
+      ]
+    }
+  ],
+  "requests": [
+    {
+      "session": "f8eafd7a-39fb-4e3d-a500-6baa8f19c571",
+      "tools": [
+        "mcp__oc__decision_agent",
+        "mcp__oc__exit_tool",
+        "mcp__oc__file_edit_search_replace",
+        "mcp__oc__file_read",
+        "mcp__oc__file_write",
+        "mcp__oc__flag_important",
+        "mcp__oc__glob",
+        "mcp__oc__grep",
+        "mcp__oc__job_block",
+        "mcp__oc__job_cancel",
+        "mcp__oc__job_result",
+        "mcp__oc__job_status",
+        "mcp__oc__list_jobs",
+        "mcp__oc__lsp",
+        "mcp__oc__mcp__linear__create_attachment",
+        "mcp__oc__mcp__linear__create_attachment_from_upload",
+        "mcp__oc__mcp__linear__create_initiative_label",
+        "mcp__oc__mcp__linear__create_issue_label",
+        "mcp__oc__mcp__linear__delete_attachment",
+        "mcp__oc__mcp__linear__delete_comment",
+        "mcp__oc__mcp__linear__delete_diff_comment",
+        "mcp__oc__mcp__linear__delete_status_update",
+        "mcp__oc__mcp__linear__extract_images",
+        "mcp__oc__mcp__linear__get_agent_skill",
+        "mcp__oc__mcp__linear__get_attachment",
+        "mcp__oc__mcp__linear__get_diff",
+        "mcp__oc__mcp__linear__get_diff_threads",
+        "mcp__oc__mcp__linear__get_document",
+        "mcp__oc__mcp__linear__get_initiative",
+        "mcp__oc__mcp__linear__get_issue",
+        "mcp__oc__mcp__linear__get_issue_status",
+        "mcp__oc__mcp__linear__get_milestone",
+        "mcp__oc__mcp__linear__get_notifications",
+        "mcp__oc__mcp__linear__get_project",
+        "mcp__oc__mcp__linear__get_release",
+        "mcp__oc__mcp__linear__get_release_note",
+        "mcp__oc__mcp__linear__get_status_updates",
+        "mcp__oc__mcp__linear__get_team",
+        "mcp__oc__mcp__linear__get_template",
+        "mcp__oc__mcp__linear__get_triage_responsibility",
+        "mcp__oc__mcp__linear__get_user",
+        "mcp__oc__mcp__linear__get_workspace",
+        "mcp__oc__mcp__linear__list_agent_skills",
+        "mcp__oc__mcp__linear__list_comments",
+        "mcp__oc__mcp__linear__list_custom_views",
+        "mcp__oc__mcp__linear__list_cycles",
+        "mcp__oc__mcp__linear__list_diffs",
+        "mcp__oc__mcp__linear__list_documents",
+        "mcp__oc__mcp__linear__list_initiative_labels",
+        "mcp__oc__mcp__linear__list_initiatives",
+        "mcp__oc__mcp__linear__list_issue_labels",
+        "mcp__oc__mcp__linear__list_issue_statuses",
+        "mcp__oc__mcp__linear__list_issues",
+        "mcp__oc__mcp__linear__list_milestones",
+        "mcp__oc__mcp__linear__list_project_labels",
+        "mcp__oc__mcp__linear__list_projects",
+        "mcp__oc__mcp__linear__list_release_notes",
+        "mcp__oc__mcp__linear__list_release_pipelines",
+        "mcp__oc__mcp__linear__list_releases",
+        "mcp__oc__mcp__linear__list_teams",
+        "mcp__oc__mcp__linear__list_templates",
+        "mcp__oc__mcp__linear__list_users",
+        "mcp__oc__mcp__linear__mark_notification",
+        "mcp__oc__mcp__linear__merge_diff",
+        "mcp__oc__mcp__linear__prepare_attachment_upload",
+        "mcp__oc__mcp__linear__prepare_file_upload",
+        "mcp__oc__mcp__linear__resolve_diff_thread",
+        "mcp__oc__mcp__linear__restore_initiative_label",
+        "mcp__oc__mcp__linear__restore_issue_label",
+        "mcp__oc__mcp__linear__restore_project_label",
+        "mcp__oc__mcp__linear__retire_initiative_label",
+        "mcp__oc__mcp__linear__retire_issue_label",
+        "mcp__oc__mcp__linear__retire_project_label",
+        "mcp__oc__mcp__linear__save_comment",
+        "mcp__oc__mcp__linear__save_diff_comment",
+        "mcp__oc__mcp__linear__save_document",
+        "mcp__oc__mcp__linear__save_initiative",
+        "mcp__oc__mcp__linear__save_initiative_label",
+        "mcp__oc__mcp__linear__save_issue",
+        "mcp__oc__mcp__linear__save_issue_label",
+        "mcp__oc__mcp__linear__save_milestone",
+        "mcp__oc__mcp__linear__save_project",
+        "mcp__oc__mcp__linear__save_project_label",
+        "mcp__oc__mcp__linear__save_release",
+        "mcp__oc__mcp__linear__save_release_note",
+        "mcp__oc__mcp__linear__save_status_update",
+        "mcp__oc__mcp__linear__search_documentation",
+        "mcp__oc__mcp__linear__share_issue",
+        "mcp__oc__mcp__linear__submit_diff_review",
+        "mcp__oc__mcp__linear__unshare_issue",
+        "mcp__oc__mcp__linear__update_diff",
+        "mcp__oc__mcp__linear__whoami",
+        "mcp__oc__mcp_list_resources",
+        "mcp__oc__mcp_read_resource",
+        "mcp__oc__popd",
+        "mcp__oc__progress_update",
+        "mcp__oc__pushd",
+        "mcp__oc__shell_exec",
+        "mcp__oc__shell_monitor",
+        "mcp__oc__skill",
+        "mcp__oc__todo_complete",
+        "mcp__oc__todo_create",
+        "mcp__oc__todo_delete",
+        "mcp__oc__todo_list",
+        "mcp__oc__todo_update",
+        "mcp__oc__tool_search",
+        "mcp__oc__web_fetch",
+        "mcp__oc__web_search"
+      ],
+      "system_json_chars": 94237,
+      "replay_records": 441,
+      "replay_json_chars": 15075961,
+      "replay_prefix_occurrences": 0
+    },
+    {
+      "session": "17e57559-856a-46c2-a5f6-9e91fc640c6f",
+      "tools": [
+        "mcp__oc__decision_agent",
+        "mcp__oc__exit_tool",
+        "mcp__oc__file_edit_search_replace",
+        "mcp__oc__file_read",
+        "mcp__oc__file_write",
+        "mcp__oc__flag_important",
+        "mcp__oc__glob",
+        "mcp__oc__grep",
+        "mcp__oc__job_block",
+        "mcp__oc__job_cancel",
+        "mcp__oc__job_result",
+        "mcp__oc__job_status",
+        "mcp__oc__list_jobs",
+        "mcp__oc__lsp",
+        "mcp__oc__mcp__linear__create_attachment",
+        "mcp__oc__mcp__linear__create_attachment_from_upload",
+        "mcp__oc__mcp__linear__create_initiative_label",
+        "mcp__oc__mcp__linear__create_issue_label",
+        "mcp__oc__mcp__linear__delete_attachment",
+        "mcp__oc__mcp__linear__delete_comment",
+        "mcp__oc__mcp__linear__delete_diff_comment",
+        "mcp__oc__mcp__linear__delete_status_update",
+        "mcp__oc__mcp__linear__extract_images",
+        "mcp__oc__mcp__linear__get_agent_skill",
+        "mcp__oc__mcp__linear__get_attachment",
+        "mcp__oc__mcp__linear__get_diff",
+        "mcp__oc__mcp__linear__get_diff_threads",
+        "mcp__oc__mcp__linear__get_document",
+        "mcp__oc__mcp__linear__get_initiative",
+        "mcp__oc__mcp__linear__get_issue",
+        "mcp__oc__mcp__linear__get_issue_status",
+        "mcp__oc__mcp__linear__get_milestone",
+        "mcp__oc__mcp__linear__get_notifications",
+        "mcp__oc__mcp__linear__get_project",
+        "mcp__oc__mcp__linear__get_release",
+        "mcp__oc__mcp__linear__get_release_note",
+        "mcp__oc__mcp__linear__get_status_updates",
+        "mcp__oc__mcp__linear__get_team",
+        "mcp__oc__mcp__linear__get_template",
+        "mcp__oc__mcp__linear__get_triage_responsibility",
+        "mcp__oc__mcp__linear__get_user",
+        "mcp__oc__mcp__linear__get_workspace",
+        "mcp__oc__mcp__linear__list_agent_skills",
+        "mcp__oc__mcp__linear__list_comments",
+        "mcp__oc__mcp__linear__list_custom_views",
+        "mcp__oc__mcp__linear__list_cycles",
+        "mcp__oc__mcp__linear__list_diffs",
+        "mcp__oc__mcp__linear__list_documents",
+        "mcp__oc__mcp__linear__list_initiative_labels",
+        "mcp__oc__mcp__linear__list_initiatives",
+        "mcp__oc__mcp__linear__list_issue_labels",
+        "mcp__oc__mcp__linear__list_issue_statuses",
+        "mcp__oc__mcp__linear__list_issues",
+        "mcp__oc__mcp__linear__list_milestones",
+        "mcp__oc__mcp__linear__list_project_labels",
+        "mcp__oc__mcp__linear__list_projects",
+        "mcp__oc__mcp__linear__list_release_notes",
+        "mcp__oc__mcp__linear__list_release_pipelines",
+        "mcp__oc__mcp__linear__list_releases",
+        "mcp__oc__mcp__linear__list_teams",
+        "mcp__oc__mcp__linear__list_templates",
+        "mcp__oc__mcp__linear__list_users",
+        "mcp__oc__mcp__linear__mark_notification",
+        "mcp__oc__mcp__linear__merge_diff",
+        "mcp__oc__mcp__linear__prepare_attachment_upload",
+        "mcp__oc__mcp__linear__prepare_file_upload",
+        "mcp__oc__mcp__linear__resolve_diff_thread",
+        "mcp__oc__mcp__linear__restore_initiative_label",
+        "mcp__oc__mcp__linear__restore_issue_label",
+        "mcp__oc__mcp__linear__restore_project_label",
+        "mcp__oc__mcp__linear__retire_initiative_label",
+        "mcp__oc__mcp__linear__retire_issue_label",
+        "mcp__oc__mcp__linear__retire_project_label",
+        "mcp__oc__mcp__linear__save_comment",
+        "mcp__oc__mcp__linear__save_diff_comment",
+        "mcp__oc__mcp__linear__save_document",
+        "mcp__oc__mcp__linear__save_initiative",
+        "mcp__oc__mcp__linear__save_initiative_label",
+        "mcp__oc__mcp__linear__save_issue",
+        "mcp__oc__mcp__linear__save_issue_label",
+        "mcp__oc__mcp__linear__save_milestone",
+        "mcp__oc__mcp__linear__save_project",
+        "mcp__oc__mcp__linear__save_project_label",
+        "mcp__oc__mcp__linear__save_release",
+        "mcp__oc__mcp__linear__save_release_note",
+        "mcp__oc__mcp__linear__save_status_update",
+        "mcp__oc__mcp__linear__search_documentation",
+        "mcp__oc__mcp__linear__share_issue",
+        "mcp__oc__mcp__linear__submit_diff_review",
+        "mcp__oc__mcp__linear__unshare_issue",
+        "mcp__oc__mcp__linear__update_diff",
+        "mcp__oc__mcp__linear__whoami",
+        "mcp__oc__mcp_list_resources",
+        "mcp__oc__mcp_read_resource",
+        "mcp__oc__popd",
+        "mcp__oc__progress_update",
+        "mcp__oc__pushd",
+        "mcp__oc__shell_exec",
+        "mcp__oc__shell_monitor",
+        "mcp__oc__skill",
+        "mcp__oc__todo_complete",
+        "mcp__oc__todo_create",
+        "mcp__oc__todo_delete",
+        "mcp__oc__todo_list",
+        "mcp__oc__todo_update",
+        "mcp__oc__tool_search",
+        "mcp__oc__web_fetch",
+        "mcp__oc__web_search"
+      ],
+      "system_json_chars": 94237,
+      "replay_records": 447,
+      "replay_json_chars": 15083835,
+      "replay_prefix_occurrences": 0
+    }
+  ]
+}
