@@ -67,7 +67,28 @@ pub fn system_prompt(request: &Request, plan: &Plan) -> String {
 pub fn configured_system_prompt(request: &Request, plan: &Plan, config: &Config) -> String {
     let mut text = system_prompt(request, plan);
     if config.align_tool_names {
-        text.push_str(&crate::name_alignment::Registry::new(&request.tools).instruction());
+        let registry = crate::name_alignment::Registry::new(&request.tools);
+        // Rewrite the incoming system only, before adding clod's own notes.
+        let mut transport = request.clone();
+        transport.system = match &request.system {
+            Content::Text(s) => Content::Text(registry.rewrite_instructions(s)),
+            Content::Blocks(blocks) => Content::Blocks(
+                blocks
+                    .iter()
+                    .map(|block| {
+                        let mut block = block.clone();
+                        if block["type"] == "text" {
+                            if let Some(text) = block["text"].as_str() {
+                                block["text"] = registry.rewrite_instructions(text).into();
+                            }
+                        }
+                        block
+                    })
+                    .collect(),
+            ),
+        };
+        text = system_prompt(&transport, plan);
+        text.push_str(&registry.instruction());
     }
     text
 }
