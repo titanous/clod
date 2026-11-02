@@ -2,6 +2,8 @@
 use crate::request::TOOL_PREFIX;
 use alloc::{format, string::String, vec::Vec};
 use serde_json::{json, Value};
+#[path = "name_alignment_templates.rs"]
+mod templates;
 
 pub const LIBRARY_INTRO: &str = "\n\nTool calls in one assistant message run one at a time, in the order they appear. Each call completes, or is explicitly moved to the background, before the next call starts. Later calls see the effects of earlier calls that completed in the same message; a call moved to the background returns a job handle before its work finishes, so use job_block, job_status, or job_result before relying on its effects.\n\nThe following tools are available in this prompt context. Use the documented field names exactly when calling a tool.\n\n";
 const IMAGE_BOUNDARY: &str = "`file_read` also reads image files (PNG, JPEG, GIF, WebP), recognized by filename extension only (.png, .jpg, .jpeg, .gif, .webp), and returns their visual content inline up to 5 MB per image. A file without a recognized image extension is returned as a binary notice even when its bytes are an image; when it is safe and authorized, copy or rename it to a supported extension and read the copy instead of attempting OCR through other tooling.";
@@ -48,6 +50,9 @@ impl Registry {
             .any(|d| {
                 d.lines().any(|l| {
                     ["## Tool Library", "## Available Tools", "## Deferred Tools"].contains(&l)
+                        || templates::TEMPLATES
+                            .iter()
+                            .any(|(template, _)| template.lines().next() == Some(l))
                 })
             })
         {
@@ -76,6 +81,34 @@ impl Registry {
                 }
             }
             if fence.is_none() {
+                // Accept complete shipped sections only, never a sentence found
+                // within arbitrary prose, a quote, or an extended section.
+                for (template, names) in templates::TEMPLATES {
+                    let heading = template.lines().next().unwrap();
+                    if line.trim_end_matches('\n') != heading
+                        || text.lines().filter(|l| *l == heading).count() != 1
+                        || !text[offset..].starts_with(template)
+                    {
+                        continue;
+                    }
+                    let rest = &text[offset + template.len()..];
+                    let following = rest.trim_start_matches('\n');
+                    if !rest.is_empty()
+                        && !(rest.starts_with("\n\n")
+                            && (following.starts_with("## ") || following.starts_with("### ")))
+                    {
+                        continue;
+                    }
+                    for name in *names {
+                        if let Some((_, wire)) = self.0.iter().find(|(c, _)| c == name) {
+                            let slot = format!("`{name}`");
+                            for (at, _) in template.match_indices(&slot) {
+                                let at = offset + at + 1;
+                                spans.push((at, at + name.len(), wire.as_str().unwrap()));
+                            }
+                        }
+                    }
+                }
                 let heading = line.trim_end_matches('\n');
                 if ["## Tool Library", "## Available Tools", "## Deferred Tools"].contains(&heading)
                     && text.lines().filter(|l| *l == heading).count() == 1
