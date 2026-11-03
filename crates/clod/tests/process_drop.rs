@@ -32,6 +32,7 @@ fn runtime_shutdown_kills_cli_process_group() {
             session_cap: 1,
             max_body_bytes: 1024 * 1024,
             allow_any_host: false,
+            weekly_breaker: false,
         });
         tokio::spawn(async move {
             axum::serve(listener, app).await.unwrap();

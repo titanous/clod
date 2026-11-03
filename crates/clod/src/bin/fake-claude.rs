@@ -18,6 +18,8 @@ struct Scenario {
 struct Script {
     fixture: Option<String>,
     #[serde(default)]
+    quota: Vec<f64>,
+    #[serde(default)]
     delay_ms: u64,
     #[serde(default)]
     eof: bool,
@@ -138,6 +140,13 @@ fn main() {
         }
         eprintln!("{refusal}");
         std::process::exit(1);
+    }
+    for utilization in script.quota {
+        println!(
+            "{}",
+            json!({"type":"rate_limit_event","rate_limit_info":{"unifiedWindows":{"seven_day":{"utilization":utilization,"resetsAt":4102444800_u64},"five_hour":{"utilization":0.25,"resetsAt":4102444800_u64}}}})
+        );
+        io::stdout().flush().unwrap();
     }
     if let Some(fixture) = script.fixture {
         let mut hooks = Vec::new();

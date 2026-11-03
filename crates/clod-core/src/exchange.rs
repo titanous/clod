@@ -17,6 +17,7 @@ use alloc::{
 use serde_json::{json, Value};
 #[derive(Clone, Debug, PartialEq)]
 pub enum Action {
+    Quota(crate::quota::Observation, u64),
     Spawn(SpawnSpec),
     WriteStdin(String),
     CloseStdin,
@@ -270,13 +271,16 @@ impl Exchange {
             .collect()
     }
     pub fn on_stdout_line(&mut self, line: &str, now: u64) -> Vec<Action> {
-        if self.done {
-            return vec![];
-        }
         let record = match protocol::parse(line) {
             Ok(r) => r,
             Err(_) => return vec![],
         };
+        if let Record::Quota(observation) = record {
+            return vec![Action::Quota(observation, now)];
+        }
+        if self.done {
+            return vec![];
+        }
         match record {
             Record::ControlRequest(r) if self.shutdown.is_none() => {
                 if r.request["subtype"] == "hook_callback" {

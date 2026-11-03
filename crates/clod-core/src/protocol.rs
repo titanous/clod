@@ -52,6 +52,7 @@ pub enum Record {
     },
     Assistant(Assistant),
     Result(ResultRecord),
+    Quota(crate::quota::Observation),
     System(Value),
     Unknown(Value),
 }
@@ -65,6 +66,9 @@ pub fn parse(line: &str) -> core::result::Result<Record, serde_json::Error> {
             event: value["event"].clone(),
             session_id: value["session_id"].as_str().map(String::from),
         },
+        Some("rate_limit_event") => {
+            Record::Quota(crate::quota::Observation::parse(&value["rate_limit_info"]))
+        }
         Some("system") => Record::System(value),
         _ => Record::Unknown(value),
     })

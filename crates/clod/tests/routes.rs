@@ -13,6 +13,7 @@ async fn shell_routes_and_invalid_body() {
         session_cap: 256,
         max_body_bytes: 256 * 1024 * 1024,
         allow_any_host: false,
+        weekly_breaker: false,
     });
     let task = tokio::spawn(async move {
         axum::serve(listener, app).await.unwrap();
@@ -113,6 +114,7 @@ async fn shell_routes_and_invalid_body() {
         session_cap: 1,
         max_body_bytes: 64,
         allow_any_host: true,
+        weekly_breaker: false,
     });
     let task = tokio::spawn(async move {
         axum::serve(listener, app).await.unwrap();

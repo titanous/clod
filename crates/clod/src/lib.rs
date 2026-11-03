@@ -61,6 +61,12 @@ fn append_record(path: &std::path::Path, value: &serde_json::Value) -> io::Resul
 }
 /// Short prefix of the session key hash for correlating log lines. The full
 /// key is only written to measurement records.
+fn epoch_seconds() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs()
+}
 fn key_label(key: &SessionKey) -> String {
     key[..6].iter().map(|byte| format!("{byte:02x}")).collect()
 }
@@ -113,6 +119,7 @@ pub struct Settings {
     pub session_cap: usize,
     pub max_body_bytes: usize,
     pub allow_any_host: bool,
+    pub weekly_breaker: bool,
 }
 impl Settings {
     pub fn from_env() -> Result<Self, Box<dyn std::error::Error>> {
@@ -183,6 +190,13 @@ impl Settings {
             api_key,
             max_body_bytes: number("CLOD_MAX_BODY_BYTES", 256 * 1024 * 1024)?,
             allow_any_host: env::var("CLOD_ALLOW_ANY_HOST").as_deref() == Ok("1"),
+            weekly_breaker: match env::var_os("CLOD_WEEKLY_BREAKER") {
+                None => false,
+                Some(value) if value == "1" => true,
+                Some(_) => {
+                    return Err("CLOD_WEEKLY_BREAKER must be 1 when set (unset disables it)".into())
+                }
+            },
             core,
             max_concurrent,
             session_cap: number("CLOD_SESSION_CAP", 256)?,
@@ -249,6 +263,7 @@ struct Shared {
     locks: Mutex<HashMap<SessionKey, Weak<AsyncMutex<()>>>>,
     permits: Arc<Semaphore>,
     clock: Instant,
+    quota: Mutex<clod_core::quota::WeeklyBreaker>,
 }
 impl Shared {
     fn now(&self) -> u64 {
@@ -266,6 +281,7 @@ pub fn router_with_groups(settings: Settings, groups: ProcessGroups) -> Router {
         permits: Arc::new(Semaphore::new(settings.max_concurrent)),
         settings,
         clock: Instant::now(),
+        quota: Mutex::new(clod_core::quota::WeeklyBreaker::default()),
     });
     Router::new()
         .route("/v1/messages", post(messages))
@@ -519,6 +535,20 @@ async fn run(
         None => None,
     };
     let _permit = shared.permits.clone().acquire_owned().await.unwrap();
+    // Recheck after both waits: queued requests must see quota observed by
+    // earlier runners. No exchange or checkpoint mutation has happened yet.
+    if shared.settings.weekly_breaker {
+        let retry = shared
+            .quota
+            .lock()
+            .unwrap()
+            .retry_after(shared.now(), epoch_seconds());
+        if let Some(retry) = retry {
+            let message = format!("Weekly subscription usage increased by more than 1 percentage point within an hour; retry after {} seconds", retry.div_ceil(1000));
+            let _ = response.send(error(429, "rate_limit_error", &message));
+            return;
+        }
+    }
     let (mut exchange, actions) = {
         let mut map = shared.map.lock().unwrap();
         if let Some(key) = key {
@@ -550,6 +580,36 @@ async fn run(
         while let Some(action) = actions.pop_front() {
             let now = shared.now();
             let observations = match action {
+                Action::Quota(observation, observed_ms) => {
+                    let epoch = epoch_seconds();
+                    shared
+                        .quota
+                        .lock()
+                        .unwrap()
+                        .observe(&observation, observed_ms, epoch);
+                    for (window, value) in [
+                        ("five_hour", observation.five_hour),
+                        ("seven_day", observation.seven_day),
+                    ] {
+                        if let Some(value) = value {
+                            let percent = value.utilization * 100.0;
+                            tracing::info!(
+                                source = "cli_rate_limit_event",
+                                window,
+                                utilization = value.utilization,
+                                percent,
+                                resets_at = value.resets_at,
+                                observed_epoch = epoch,
+                                observed_ms,
+                                "subscription quota observed"
+                            );
+                            measure(
+                                serde_json::json!({"kind":"quota","source":"cli_rate_limit_event","window":window,"utilization":value.utilization,"percent":percent,"resets_at":value.resets_at,"observed_epoch":epoch,"observed_ms":observed_ms}),
+                            );
+                        }
+                    }
+                    vec![]
+                }
                 Action::Spawn(spec) => {
                     cli_attempt += 1;
                     let source = spec

@@ -8,6 +8,7 @@ extern crate std;
 pub mod exchange;
 pub mod name_alignment;
 pub mod protocol;
+pub mod quota;
 pub mod replay;
 pub mod request;
 pub mod security;
