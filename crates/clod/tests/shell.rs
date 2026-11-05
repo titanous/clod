@@ -123,7 +123,23 @@ async fn weekly_breaker_blocks_queued_and_subsequent_requests_without_spawn() {
             assert!(record["observed_epoch"].is_u64());
             assert_eq!(record["source"], "cli_rate_limit_event");
         }
+        let limits: Vec<Value> = measurements
+            .lines()
+            .filter_map(|line| serde_json::from_str::<Value>(line).ok())
+            .filter(|v| v["kind"] == "rate_limit")
+            .collect();
+        assert_eq!(limits.len(), usize::from(blocked));
         if blocked {
+            let event = &limits[0];
+            assert_eq!(event["source"], "local_weekly_breaker");
+            assert_eq!(event["semantic_status"], 429);
+            assert_eq!(event["http_status"], 429);
+            assert!(event["request"].is_u64());
+            assert_eq!(event["breaker"]["state"], "open");
+            assert_eq!(event["breaker"]["current_utilization"], 0.23);
+            assert_eq!(event["breaker"]["baseline_utilization"], 0.2);
+            assert!(event["breaker"]["predicted_reopen_ms"].is_u64());
+            assert!(event["breaker"]["weekly_resets_at"].is_u64());
             assert!(statuses.contains(&200));
             assert!(statuses.contains(&429));
             let rejected = server.post(&request(true)).send().await.unwrap();
@@ -141,6 +157,54 @@ async fn weekly_breaker_blocks_queued_and_subsequent_requests_without_spawn() {
         } else {
             assert_eq!(statuses, [200, 200]);
             assert_eq!(server.logs().len(), 2);
+        }
+    }
+}
+#[tokio::test]
+async fn upstream_rate_limit_logs_json_and_committed_sse() {
+    for streaming in [false, true] {
+        for enabled in [false, true] {
+            let dir = tempfile::tempdir().unwrap();
+            let path = dir.path().join("limit.ndjson");
+            let mut records = Vec::new();
+            if streaming {
+                records.push(json!({"type":"stream_event","event":{"type":"message_start","message":{"id":"msg","content":[]}}}));
+                records.push(json!({"type":"stream_event","event":{"type":"content_block_start","index":0,"content_block":{"type":"text","text":"partial"}}}));
+            }
+            records.push(json!({"type":"assistant","error":"rate_limit","apiError":"usage_limit_reached","message":{"content":[{"type":"text","text":"private diagnostic"}]}}));
+            fs::write(
+                &path,
+                records
+                    .into_iter()
+                    .map(|line| json!({"dir":"out","line":line}).to_string() + "\n")
+                    .collect::<String>(),
+            )
+            .unwrap();
+            let script = json!({"fixture":path,"eof":true,"breaker":enabled});
+            let server = Server::start(script, None, false, false).await;
+            let reply = server.post(&request(streaming)).send().await.unwrap();
+            assert_eq!(reply.status().as_u16(), if streaming { 200 } else { 429 });
+            let _ = reply.text().await.unwrap();
+            let measurements =
+                fs::read_to_string(server.scenario.parent().unwrap().join("measure.ndjson"))
+                    .unwrap();
+            let limits: Vec<Value> = measurements
+                .lines()
+                .filter_map(|s| serde_json::from_str::<Value>(s).ok())
+                .filter(|v| v["kind"] == "rate_limit")
+                .collect();
+            assert_eq!(limits.len(), 1);
+            let event = &limits[0];
+            assert_eq!(event["source"], "cli_rate_limit");
+            assert_eq!(event["http_status"], if streaming { 200 } else { 429 });
+            assert_eq!(event["semantic_status"], 429);
+            assert_eq!(
+                event["breaker"]["state"],
+                if enabled { "unknown" } else { "disabled" }
+            );
+            assert!(event["breaker"]["weekly_resets_at"].is_null());
+            assert!(event["breaker"]["five_hour_resets_at"].is_null());
+            assert!(!event.to_string().contains("private diagnostic"));
         }
     }
 }

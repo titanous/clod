@@ -36,6 +36,37 @@ fn reap(e: &mut Exchange) -> Vec<Action> {
 }
 
 #[test]
+fn terminal_rate_limit_emits_one_typed_diagnostic() {
+    for stream in [false, true] {
+        let mut e = new(stream, false);
+        if stream {
+            out(
+                &mut e,
+                json!({"type":"stream_event","event":{"type":"message_start","message":{"id":"msg","content":[]}}}),
+            );
+            out(
+                &mut e,
+                json!({"type":"stream_event","event":{"type":"content_block_start","index":0,"content_block":{"type":"text","text":"partial"}}}),
+            );
+        }
+        let actions = out(
+            &mut e,
+            json!({"type":"result","subtype":"error_during_execution","is_error":true,"errors":["usage limit reached"]}),
+        );
+        assert_eq!(
+            actions
+                .iter()
+                .filter(|a| matches!(a, Action::RateLimited { .. }))
+                .count(),
+            1
+        );
+        assert!(actions.contains(&Action::RateLimited {
+            http_status: if stream { 200 } else { 429 }
+        }));
+    }
+}
+
+#[test]
 fn captured_error_metadata_is_preserved() {
     let Record::Assistant(a) = protocol::parse(LIMIT).unwrap() else {
         panic!()
@@ -62,6 +93,15 @@ fn usage_limit_before_and_after_content_never_commits() {
                     );
                 }
                 let mut a = e.on_stdout_line(LIMIT, 10);
+                assert_eq!(
+                    a.iter()
+                        .filter(|a| matches!(a, Action::RateLimited { .. }))
+                        .count(),
+                    1
+                );
+                assert!(a.contains(&Action::RateLimited {
+                    http_status: if stream && content { 200 } else { 429 }
+                }));
                 assert_eq!(e.checkpoint_reason(), Some("AssistantApiError"));
                 assert!(a.iter().any(|a| matches!(a, Action::CloseStdin)));
                 if stream && content {

@@ -18,6 +18,10 @@ use serde_json::{json, Value};
 #[derive(Clone, Debug, PartialEq)]
 pub enum Action {
     Quota(crate::quota::Observation, u64),
+    /// Semantic 429; HTTP remains 200 if SSE has already started.
+    RateLimited {
+        http_status: u16,
+    },
     Spawn(SpawnSpec),
     WriteStdin(String),
     CloseStdin,
@@ -215,6 +219,18 @@ impl Exchange {
         if self.gone {
             return vec![];
         }
+        let mut actions = self.error_response(status, kind, text);
+        if status == 429 && !actions.is_empty() {
+            actions.insert(
+                0,
+                Action::RateLimited {
+                    http_status: if self.sse { 200 } else { 429 },
+                },
+            );
+        }
+        actions
+    }
+    fn error_response(&mut self, status: u16, kind: &str, text: &str) -> Vec<Action> {
         let body = error_envelope(kind, text);
         if self.committed {
             if self.sse {

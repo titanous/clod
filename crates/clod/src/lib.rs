@@ -512,6 +512,24 @@ impl Drop for Process {
         self.writer.abort();
     }
 }
+fn log_rate_limit(
+    request: u64,
+    source: &'static str,
+    http_status: u16,
+    snapshot: clod_core::quota::Snapshot,
+) {
+    // Only bounded labels and numeric quota data; never CLI error text.
+    let record = serde_json::json!({
+        "kind": "rate_limit", "request": request, "source": source,
+        "http_status": http_status, "semantic_status": 429,
+        "observed_epoch": epoch_seconds(), "breaker": snapshot,
+    });
+    tracing::warn!(request, source, http_status, semantic_status = 429,
+        breaker_enabled = snapshot.enabled, breaker_state = snapshot.state,
+        details = %record, "request rate limited");
+    measure(record);
+}
+
 async fn run(
     shared: Arc<Shared>,
     request: Request,
@@ -547,13 +565,14 @@ async fn run(
     // Recheck after both waits: queued requests must see quota observed by
     // earlier runners. No exchange or checkpoint mutation has happened yet.
     if shared.settings.weekly_breaker {
-        let retry = shared
+        let snapshot = shared
             .quota
             .lock()
             .unwrap()
-            .retry_after(shared.now(), epoch_seconds());
-        if let Some(retry) = retry {
-            let message = format!("Weekly subscription usage increased by more than {} percentage points within an hour; retry after {} seconds", shared.settings.weekly_breaker_threshold.percent(), retry.div_ceil(1000));
+            .snapshot(true, shared.now(), epoch_seconds());
+        if let Some(retry) = snapshot.earliest_recheck_ms {
+            log_rate_limit(measurement_id, "local_weekly_breaker", 429, snapshot);
+            let message = format!("Weekly subscription usage increased by more than {} percentage points within an hour; recheck after {} seconds", shared.settings.weekly_breaker_threshold.percent(), retry.div_ceil(1000));
             let _ = response.send(error(429, "rate_limit_error", &message));
             return;
         }
@@ -589,6 +608,15 @@ async fn run(
         while let Some(action) = actions.pop_front() {
             let now = shared.now();
             let observations = match action {
+                Action::RateLimited { http_status } => {
+                    let snapshot = shared.quota.lock().unwrap().snapshot(
+                        shared.settings.weekly_breaker,
+                        now,
+                        epoch_seconds(),
+                    );
+                    log_rate_limit(measurement_id, "cli_rate_limit", http_status, snapshot);
+                    vec![]
+                }
                 Action::Quota(observation, observed_ms) => {
                     let epoch = epoch_seconds();
                     shared

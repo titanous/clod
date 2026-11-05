@@ -78,6 +78,28 @@ impl Default for WeeklyThreshold {
         Self(0.01)
     }
 }
+/// Diagnostic state at a caller-supplied instant. Reset epochs are quota resets,
+/// not promises of admission. Delays assume no further observations.
+#[derive(Clone, Debug, Serialize, PartialEq)]
+pub struct Snapshot {
+    pub enabled: bool,
+    pub state: &'static str,
+    pub threshold_utilization: f64,
+    pub window_ms: u64,
+    pub baseline_utilization: Option<f64>,
+    pub current_utilization: Option<f64>,
+    pub delta_utilization: Option<f64>,
+    pub weekly_observation_age_ms: Option<u64>,
+    pub weekly_resets_at: Option<u64>,
+    pub weekly_reset_expired: Option<bool>,
+    pub five_hour_utilization: Option<f64>,
+    pub five_hour_resets_at: Option<u64>,
+    pub five_hour_observation_age_ms: Option<u64>,
+    pub five_hour_reset_expired: Option<bool>,
+    pub earliest_recheck_ms: Option<u64>,
+    pub predicted_reopen_ms: Option<u64>,
+}
+
 /// No clock or I/O: callers supply monotonic milliseconds and Unix seconds.
 /// Restarting loses the baseline. Missing data is not a zero observation.
 #[derive(Default)]
@@ -86,6 +108,8 @@ pub struct WeeklyBreaker {
     samples: VecDeque<Sample>,
     reset: Option<u64>,
     last_observed: Option<u64>,
+    weekly: Option<(Window, u64)>,
+    five_hour: Option<(Window, u64)>,
 }
 impl WeeklyBreaker {
     pub fn new(threshold: WeeklyThreshold) -> Self {
@@ -100,6 +124,20 @@ impl WeeklyBreaker {
         }
         self.last_observed = Some(now);
         self.expire(now, epoch);
+        if let Some(window) = observation.five_hour.filter(|w| {
+            w.valid()
+                && (w.resets_at > epoch
+                    || self.five_hour.is_none_or(|(old, _)| old.resets_at <= epoch))
+        }) {
+            self.five_hour = Some((window, now));
+        }
+        if let Some(window) = observation.seven_day.filter(|w| {
+            w.valid()
+                && (w.resets_at > epoch
+                    || self.weekly.is_none_or(|(old, _)| old.resets_at <= epoch))
+        }) {
+            self.weekly = Some((window, now));
+        }
         let Some(window) = observation
             .seven_day
             .filter(|w| w.valid() && w.resets_at > epoch)
@@ -140,6 +178,56 @@ impl WeeklyBreaker {
             self.reset = None;
         }
     }
+    pub fn snapshot(&mut self, enabled: bool, now: u64, epoch: u64) -> Snapshot {
+        let recheck = self.retry_after(now, epoch);
+        let first = self.samples.front();
+        let latest = self.samples.back();
+        // All samples preceding the first non-triggering baseline must expire.
+        // Using only the oldest sample would understate a repeated plateau.
+        let reopen = recheck.and_then(|_| {
+            let latest = latest?;
+            self.samples
+                .iter()
+                .take_while(|s| latest.usage > s.usage + self.threshold.0)
+                .last()
+                .map(|s| {
+                    let delay = HOUR_MS.saturating_sub(now.saturating_sub(s.at));
+                    delay.min(
+                        self.reset
+                            .unwrap_or(epoch)
+                            .saturating_sub(epoch)
+                            .saturating_mul(1000),
+                    )
+                })
+        });
+        Snapshot {
+            enabled,
+            state: if !enabled {
+                "disabled"
+            } else if recheck.is_some() {
+                "open"
+            } else if self.samples.len() < 2 {
+                "unknown"
+            } else {
+                "closed"
+            },
+            threshold_utilization: self.threshold.0,
+            window_ms: HOUR_MS,
+            baseline_utilization: first.map(|s| s.usage),
+            current_utilization: self.weekly.map(|(w, _)| w.utilization),
+            delta_utilization: first.zip(latest).map(|(a, b)| b.usage - a.usage),
+            weekly_observation_age_ms: self.weekly.map(|(_, at)| now.saturating_sub(at)),
+            weekly_resets_at: self.weekly.map(|(w, _)| w.resets_at),
+            weekly_reset_expired: self.weekly.map(|(w, _)| w.resets_at <= epoch),
+            five_hour_utilization: self.five_hour.map(|(w, _)| w.utilization),
+            five_hour_resets_at: self.five_hour.map(|(w, _)| w.resets_at),
+            five_hour_observation_age_ms: self.five_hour.map(|(_, at)| now.saturating_sub(at)),
+            five_hour_reset_expired: self.five_hour.map(|(w, _)| w.resets_at <= epoch),
+            earliest_recheck_ms: recheck,
+            predicted_reopen_ms: reopen,
+        }
+    }
+    /// Earliest baseline recheck, not a promise that the breaker will reopen.
     /// Retry delay in milliseconds, or admission. Expiry is checked even when
     /// no CLI is running and no more observations arrive.
     pub fn retry_after(&mut self, now: u64, epoch: u64) -> Option<u64> {
@@ -186,6 +274,44 @@ mod tests {
             }
         }
         assert_eq!(WeeklyThreshold::default().percent(), 1.0);
+    }
+    #[test]
+    fn diagnostic_timing_and_unknown_observations() {
+        let mut b = WeeklyBreaker::default();
+        let empty = b.snapshot(true, 0, 1);
+        assert_eq!(empty.state, "unknown");
+        assert_eq!(empty.weekly_resets_at, None);
+        assert_eq!(empty.five_hour_resets_at, None);
+        observe(&mut b, 0, 0.2, 10000);
+        observe(&mut b, 100, 0.2, 10000);
+        observe(&mut b, 200, 0.2, 10000);
+        observe(&mut b, 300, 0.23, 10000);
+        let s = b.snapshot(true, 350, 1);
+        assert_eq!(s.state, "open");
+        assert_eq!(s.earliest_recheck_ms, Some(HOUR_MS - 350));
+        assert_eq!(s.predicted_reopen_ms, Some(HOUR_MS - 150));
+        assert_eq!(s.weekly_observation_age_ms, Some(50));
+        assert_eq!(b.snapshot(false, 350, 1).state, "disabled");
+        assert_eq!(b.snapshot(true, HOUR_MS + 200, 1).predicted_reopen_ms, None);
+        let expired = b.snapshot(true, HOUR_MS + 200, 10000);
+        assert_eq!(expired.state, "unknown");
+        assert_eq!(expired.weekly_reset_expired, Some(true));
+        assert_eq!(expired.baseline_utilization, None);
+        b.observe(
+            &Observation {
+                five_hour: Some(Window {
+                    utilization: 0.9,
+                    resets_at: 30,
+                }),
+                ..Observation::default()
+            },
+            HOUR_MS + 201,
+            20,
+        );
+        let s = b.snapshot(true, HOUR_MS + 211, 31);
+        assert_eq!(s.five_hour_resets_at, Some(30));
+        assert_eq!(s.five_hour_reset_expired, Some(true));
+        assert_eq!(s.five_hour_observation_age_ms, Some(10));
     }
     #[test]
     fn invalid_thresholds_are_rejected() {

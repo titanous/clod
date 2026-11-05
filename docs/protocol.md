@@ -87,6 +87,30 @@ Sequence observed: MCP `initialize` (protocolVersion `2025-11-25`, JSON-RPC id 0
 
 Hook input also contains prompt id, permission mode and effort. Hooks **do fire for SDK MCP tools**. No test tool implementation ran.
 
+### Rate-limit diagnostics
+
+Every emitted rate-limit outcome produces a warning `request rate limited` and a
+measurement record with `kind:rate_limit`, a numeric request identifier,
+`source:local_weekly_breaker` or `source:cli_rate_limit`, `semantic_status:429`,
+and the HTTP status. An SSE error after commitment has HTTP 200, not HTTP 429.
+The local admission check runs after queue waits and logs even though no CLI is
+spawned. Auth/body validation does not generate 429s.
+
+The `breaker` diagnostic object is calculated by the pure core. `state` is
+`disabled`, `open`, `closed`, or `unknown` (fewer than two active baseline
+samples). It includes the configured utilization threshold, rolling window,
+baseline/current utilization, delta, and observation ages in monotonic
+milliseconds. Missing values are JSON null; expired observations retain their
+age and `*_reset_expired:true`, but cannot supply an active baseline.
+`earliest_recheck_ms` is the oldest triggering baseline's expiry, not guaranteed
+reopening. `predicted_reopen_ms` is when all currently triggering baselines
+expire (or the weekly reset, if sooner), **assuming no further observations and
+normal clock progression**. Neither promises that an upstream limit will clear.
+`weekly_resets_at` and `five_hour_resets_at` are independently observed Unix
+seconds, never derived from CLI prose or confused with rolling-window delays.
+No account metadata, prompts, or CLI error text enter this event. Admission and
+HTTP headers are unchanged; the local error message calls its delay a recheck.
+
 ### Results and streaming
 
 `stream_event` contains `event` (Anthropic `message_start`, `content_block_*`, `message_delta`, `message_stop`), plus CLI session/UUID fields. Assistant records have `type:assistant`, `uuid`, `session_id`, and `message.content`. Denied calls produce user tool-result records, then a terminal `result`.
