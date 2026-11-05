@@ -56,15 +56,44 @@ struct Sample {
     at: u64,
     usage: f64,
 }
+/// A validated rise in utilization, expressed as a fraction (0.01 is 1pp).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct WeeklyThreshold(f64);
+#[derive(Debug, thiserror::Error)]
+#[error("weekly breaker threshold must be finite, greater than zero and at most 1 utilization")]
+pub struct InvalidWeeklyThreshold;
+impl WeeklyThreshold {
+    pub fn new(fraction: f64) -> Result<Self, InvalidWeeklyThreshold> {
+        if !fraction.is_finite() || fraction <= 0.0 || fraction > 1.0 {
+            return Err(InvalidWeeklyThreshold);
+        }
+        Ok(Self(fraction))
+    }
+    pub fn percent(self) -> f64 {
+        self.0 * 100.0
+    }
+}
+impl Default for WeeklyThreshold {
+    fn default() -> Self {
+        Self(0.01)
+    }
+}
 /// No clock or I/O: callers supply monotonic milliseconds and Unix seconds.
 /// Restarting loses the baseline. Missing data is not a zero observation.
 #[derive(Default)]
 pub struct WeeklyBreaker {
+    threshold: WeeklyThreshold,
     samples: VecDeque<Sample>,
     reset: Option<u64>,
     last_observed: Option<u64>,
 }
 impl WeeklyBreaker {
+    pub fn new(threshold: WeeklyThreshold) -> Self {
+        Self {
+            threshold,
+            ..Self::default()
+        }
+    }
     pub fn observe(&mut self, observation: &Observation, now: u64, epoch: u64) {
         if self.last_observed.is_some_and(|last| now < last) {
             return;
@@ -118,8 +147,8 @@ impl WeeklyBreaker {
         let first = self.samples.front()?;
         let latest = self.samples.back()?;
         // Compare against the rounded endpoint, not a subtraction that can
-        // round an exact decimal 1pp rise upward. No extra quota margin.
-        if latest.usage > first.usage + 0.01 {
+        // round an exact decimal threshold rise upward. No extra quota margin.
+        if latest.usage > first.usage + self.threshold.0 {
             Some(HOUR_MS.saturating_sub(now.saturating_sub(first.at)))
         } else {
             None
@@ -145,15 +174,25 @@ mod tests {
     }
     #[test]
     fn strict_threshold_expiry_and_silence() {
-        for baseline in [0.0, 0.2, 0.67, 0.9] {
-            let mut b = WeeklyBreaker::default();
-            observe(&mut b, 0, baseline, 10000);
-            observe(&mut b, 100, baseline + 0.01, 10000);
-            assert_eq!(b.retry_after(100, 1), None);
-            observe(&mut b, 200, baseline + 0.010001, 10000);
-            assert_eq!(b.retry_after(200, 1), Some(HOUR_MS - 200));
-            assert_eq!(b.retry_after(HOUR_MS + 100, 1), None);
+        for threshold in [0.01, 0.02, 0.005] {
+            for baseline in [0.0, 0.2, 0.67, 0.9] {
+                let mut b = WeeklyBreaker::new(WeeklyThreshold::new(threshold).unwrap());
+                observe(&mut b, 0, baseline, 10000);
+                observe(&mut b, 100, baseline + threshold, 10000);
+                assert_eq!(b.retry_after(100, 1), None);
+                observe(&mut b, 200, baseline + threshold + 0.000001, 10000);
+                assert_eq!(b.retry_after(200, 1), Some(HOUR_MS - 200));
+                assert_eq!(b.retry_after(HOUR_MS + 100, 1), None);
+            }
         }
+        assert_eq!(WeeklyThreshold::default().percent(), 1.0);
+    }
+    #[test]
+    fn invalid_thresholds_are_rejected() {
+        for fraction in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY, 0.0, -0.01, 1.01] {
+            assert!(WeeklyThreshold::new(fraction).is_err());
+        }
+        assert_eq!(WeeklyThreshold::new(1.0).unwrap().percent(), 100.0);
     }
     #[test]
     fn repeated_observations_preserve_rolling_baselines() {
@@ -161,7 +200,7 @@ mod tests {
         observe(&mut b, 0, 0.2, 10000);
         observe(&mut b, 100, 0.2, 10000);
         observe(&mut b, 200, 0.2, 10000);
-        observe(&mut b, 300, 0.22, 10000);
+        observe(&mut b, 300, 0.23, 10000);
         assert_eq!(b.retry_after(HOUR_MS, 1), Some(100));
         assert_eq!(b.retry_after(HOUR_MS + 100, 1), Some(100));
         assert_eq!(b.retry_after(HOUR_MS + 200, 1), None);
@@ -182,7 +221,7 @@ mod tests {
         b.observe(&Observation::default(), 102, 1);
         observe(&mut b, 99, 0.9, 10000);
         assert_eq!(b.retry_after(103, 1), None);
-        observe(&mut b, 104, 0.22, 10000);
+        observe(&mut b, 104, 0.23, 10000);
         assert!(b.retry_after(104, 1).is_some());
         observe(&mut b, 105, 0.21, 10000);
         assert_eq!(b.retry_after(105, 1), None);

@@ -120,6 +120,7 @@ pub struct Settings {
     pub max_body_bytes: usize,
     pub allow_any_host: bool,
     pub weekly_breaker: bool,
+    pub weekly_breaker_threshold: clod_core::quota::WeeklyThreshold,
 }
 impl Settings {
     pub fn from_env() -> Result<Self, Box<dyn std::error::Error>> {
@@ -190,6 +191,12 @@ impl Settings {
             api_key,
             max_body_bytes: number("CLOD_MAX_BODY_BYTES", 256 * 1024 * 1024)?,
             allow_any_host: env::var("CLOD_ALLOW_ANY_HOST").as_deref() == Ok("1"),
+            weekly_breaker_threshold: {
+                let percent: f64 = number("CLOD_WEEKLY_BREAKER_PERCENT", 1.0)
+                    .map_err(|_| "CLOD_WEEKLY_BREAKER_PERCENT must be a finite number greater than 0 and at most 100")?;
+                clod_core::quota::WeeklyThreshold::new(percent / 100.0)
+                    .map_err(|_| "CLOD_WEEKLY_BREAKER_PERCENT must be a finite number greater than 0 and at most 100")?
+            },
             weekly_breaker: match env::var_os("CLOD_WEEKLY_BREAKER") {
                 None => false,
                 Some(value) if value == "1" => true,
@@ -279,9 +286,11 @@ pub fn router_with_groups(settings: Settings, groups: ProcessGroups) -> Router {
         map: Mutex::new(SessionMap::new(settings.session_cap)),
         locks: Mutex::new(HashMap::new()),
         permits: Arc::new(Semaphore::new(settings.max_concurrent)),
+        quota: Mutex::new(clod_core::quota::WeeklyBreaker::new(
+            settings.weekly_breaker_threshold,
+        )),
         settings,
         clock: Instant::now(),
-        quota: Mutex::new(clod_core::quota::WeeklyBreaker::default()),
     });
     Router::new()
         .route("/v1/messages", post(messages))
@@ -544,7 +553,7 @@ async fn run(
             .unwrap()
             .retry_after(shared.now(), epoch_seconds());
         if let Some(retry) = retry {
-            let message = format!("Weekly subscription usage increased by more than 1 percentage point within an hour; retry after {} seconds", retry.div_ceil(1000));
+            let message = format!("Weekly subscription usage increased by more than {} percentage points within an hour; retry after {} seconds", shared.settings.weekly_breaker_threshold.percent(), retry.div_ceil(1000));
             let _ = response.send(error(429, "rate_limit_error", &message));
             return;
         }

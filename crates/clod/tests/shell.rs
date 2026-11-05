@@ -81,10 +81,19 @@ async fn tool_name_alignment_environment_opt_in_reaches_fake_cli() {
 }
 #[tokio::test]
 async fn weekly_breaker_blocks_queued_and_subsequent_requests_without_spawn() {
-    for enabled in [false, true] {
+    for (enabled, percent) in [
+        (false, None),
+        (false, Some(2.0)),
+        (true, None),
+        (true, Some(2.0)),
+        (true, Some(0.5)),
+        (true, Some(100.0)),
+    ] {
+        let blocked = enabled && percent.unwrap_or(1.0) < 3.0;
         let mut script = text();
-        script["quota"] = json!([0.2, 0.22]);
+        script["quota"] = json!([0.2, 0.23]);
         script["breaker"] = json!(enabled);
+        script["breaker_percent"] = json!(percent);
         script["delay_ms"] = json!(100);
         let server = Server::start(script.clone(), Some(script), false, false).await;
         // Identical session keys serialize, so the second request must recheck
@@ -105,8 +114,8 @@ async fn weekly_breaker_blocks_queued_and_subsequent_requests_without_spawn() {
             .filter(|v| v["kind"] == "quota")
             .collect();
         assert!(quota.iter().any(|v| v["window"] == "seven_day"
-            && v["utilization"] == 0.22
-            && v["percent"] == 22.0));
+            && v["utilization"] == 0.23
+            && v["percent"] == 23.0));
         assert!(quota.iter().any(|v| v["window"] == "five_hour"));
         for record in quota {
             assert_eq!(record.as_object().unwrap().len(), 8);
@@ -114,15 +123,20 @@ async fn weekly_breaker_blocks_queued_and_subsequent_requests_without_spawn() {
             assert!(record["observed_epoch"].is_u64());
             assert_eq!(record["source"], "cli_rate_limit_event");
         }
-        if enabled {
+        if blocked {
             assert!(statuses.contains(&200));
             assert!(statuses.contains(&429));
             let rejected = server.post(&request(true)).send().await.unwrap();
             assert_eq!(rejected.status(), 429);
-            assert_eq!(
-                rejected.json::<Value>().await.unwrap()["error"]["type"],
-                "rate_limit_error"
-            );
+            let body = rejected.json::<Value>().await.unwrap();
+            assert_eq!(body["error"]["type"], "rate_limit_error");
+            assert!(body["error"]["message"]
+                .as_str()
+                .unwrap()
+                .contains(&format!(
+                    "more than {} percentage points",
+                    percent.unwrap_or(1.0)
+                )));
             assert_eq!(server.logs().len(), 1);
         } else {
             assert_eq!(statuses, [200, 200]);
@@ -200,6 +214,10 @@ impl Server {
             .stderr(Stdio::inherit())
             .kill_on_drop(true);
         cmd.env_remove("CLOD_WEEKLY_BREAKER");
+        cmd.env_remove("CLOD_WEEKLY_BREAKER_PERCENT");
+        if let Some(percent) = fresh["breaker_percent"].as_f64() {
+            cmd.env("CLOD_WEEKLY_BREAKER_PERCENT", percent.to_string());
+        }
         if fresh["breaker"].as_bool() == Some(true) {
             cmd.env("CLOD_WEEKLY_BREAKER", "1");
         }

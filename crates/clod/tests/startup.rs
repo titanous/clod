@@ -3,6 +3,46 @@ use std::process::Command;
 fn unsafe_startup_settings_are_rejected() {
     for (name, value, expected) in [
         ("CLOD_API_KEY", "", "must not be empty"),
+        (
+            "CLOD_WEEKLY_BREAKER_PERCENT",
+            "",
+            "CLOD_WEEKLY_BREAKER_PERCENT",
+        ),
+        (
+            "CLOD_WEEKLY_BREAKER_PERCENT",
+            "invalid",
+            "CLOD_WEEKLY_BREAKER_PERCENT",
+        ),
+        (
+            "CLOD_WEEKLY_BREAKER_PERCENT",
+            "NaN",
+            "CLOD_WEEKLY_BREAKER_PERCENT",
+        ),
+        (
+            "CLOD_WEEKLY_BREAKER_PERCENT",
+            "inf",
+            "CLOD_WEEKLY_BREAKER_PERCENT",
+        ),
+        (
+            "CLOD_WEEKLY_BREAKER_PERCENT",
+            "-inf",
+            "CLOD_WEEKLY_BREAKER_PERCENT",
+        ),
+        (
+            "CLOD_WEEKLY_BREAKER_PERCENT",
+            "0",
+            "CLOD_WEEKLY_BREAKER_PERCENT",
+        ),
+        (
+            "CLOD_WEEKLY_BREAKER_PERCENT",
+            "-1",
+            "CLOD_WEEKLY_BREAKER_PERCENT",
+        ),
+        (
+            "CLOD_WEEKLY_BREAKER_PERCENT",
+            "100.01",
+            "CLOD_WEEKLY_BREAKER_PERCENT",
+        ),
         ("CLOD_WEEKLY_BREAKER", "0", "must be 1"),
         ("CLOD_WEEKLY_BREAKER", "true", "must be 1"),
         ("CLOD_WEEKLY_BREAKER", "", "must be 1"),
@@ -26,6 +66,8 @@ fn unsafe_startup_settings_are_rejected() {
             .env_remove("CLOD_ALIGN_TOOL_NAMES")
             .env_remove("CLOD_UPSTREAM_BASE_URL")
             .env_remove("CLOD_API_KEY")
+            .env_remove("CLOD_WEEKLY_BREAKER")
+            .env_remove("CLOD_WEEKLY_BREAKER_PERCENT")
             .env("CLOD_WORKDIR", dir.path())
             .env(name, value)
             .output()
