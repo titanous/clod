@@ -469,6 +469,11 @@ impl Exchange {
                                 a.api_error.as_deref(),
                                 Some("usage_limit_reached" | "rate_limit" | "rate_limit_error")
                             );
+                    let authentication = [a.error.as_deref(), a.api_error.as_deref()]
+                        .into_iter()
+                        .any(|kind| {
+                            matches!(kind, Some("authentication_failed" | "authentication_error"))
+                        });
                     let text = a.message["content"]
                         .as_array()
                         .map(|blocks| {
@@ -491,6 +496,8 @@ impl Exchange {
                     }
                     let (status, kind) = if rate_limit {
                         (429, "rate_limit_error")
+                    } else if authentication {
+                        (401, "authentication_error")
                     } else {
                         (500, "api_error")
                     };
