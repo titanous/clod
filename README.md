@@ -81,21 +81,33 @@ The model sees Polytoken's system prompt and client tools exposed as `mcp__oc__<
 
 ## Resume and caching
 
-Checkpoint keys include conversation identity (`X-Polytoken-Conversation`, falling back to `X-Polytoken-Session`), model, system and tools. The echoed history must match the checkpoint hash; consecutive trailing user messages are merged into one CLI input with blocks in order. Pending calls require exactly one result each, without duplicates or unknown IDs. Resume forks at the last forwarded-tool assistant UUID (or last text assistant UUID), dropping CLI hook denials. Declared bare tool calls are forwarded unchanged. Turns whose forwarded calls are all bare names exactly matching declared tools may checkpoint under the same safety rules as prefixed turns, based on the clean 2026-10-26 live fork evidence. Mixed bare/prefixed turns still discard with `MixedBareAndPrefixedToolCalls`: that case could not be proved live. Tool checkpoints must be the final assistant record, and streamed/recorded tool IDs must agree exactly; repeated CLI messages also force replay.
+### Checkpoints and resume
 
-Missing identity/checkpoints, changed system/tools/model, edited history, invalid results, stale CLI sessions, map eviction and server restart cause fresh replay. A stale resume can retry fresh once before any response is committed. Replay rewrites history and can lose native history cache reuse. Closing `</conversation_history>` tags inside history are neutralized; replay framing is otherwise plain text, and replayed roles are not structurally protected.
+clod keeps a bounded, in-memory map of CLI checkpoints. Each key combines the conversation identity (`X-Polytoken-Conversation`, falling back to `X-Polytoken-Session`), model, system prompt and tool definitions. A checkpoint records the CLI session, an assistant-message boundary, a hash of the conversation prefix and any pending tool-call IDs.
 
-Cache measurements found stable requests recover caching; system changes, deferred-tool exposure and facet switches invalidate prefixes. A warm shared static prefix does not prove native history reuse. On CLI 2.1.308, image-turn merging/resume and signed thinking (streaming, non-streaming, adaptive tool continuation) were verified live on 2026-10-26. A tool-result image also resumed successfully. Bare-name forwarding and a clean bare-call fork were observed live; bare-only checkpoint eligibility is regression-tested offline, while mixed turns remain disabled. See [protocol evidence](docs/protocol.md#live-verification-2026-10-26) and [cache findings](docs/cache-measurements.md).
+On the next request, clod checks that the echoed history matches the saved prefix and that every pending tool call has exactly one result, with no duplicates or unknown IDs. It then forks the CLI session at the saved assistant boundary and supplies only the new user messages. Consecutive trailing user messages are merged into one input while preserving block order. Forking before the CLI's tool-denial records lets the client supply the real tool results instead.
 
-Only with explicit operator approval, run the ignored direct-HTTP checks with:
+A checkpoint is saved only when the CLI records provide a safe resume boundary. Streamed and recorded tool IDs must agree, and CLI-generated results must not be interleaved before later tool calls. Mixed bare and prefixed tool names, additional assistant messages, or CLI media removal also prevent checkpointing. These checks avoid resuming history that differs from what the client saw.
 
-```sh
-OPERATOR_APPROVED_LIVE_VERIFY=1 CLOD_LIVE=1 cargo test -p clod --test live_verify -- --ignored --nocapture --test-threads=1
-```
+### Fresh replay
 
-Each test makes three expected upstream requests (image: Haiku; thinking: Sonnet), with a hard four-attempt ceiling including CLI retries. Raw evidence and dedicated HOME/workdir/transcript folders are retained for operator cleanup. Thinking generation is model-dependent; a missing thinking block fails rather than claiming pass-through was verified.
+Without a matching checkpoint, clod starts a new CLI session and renders the supplied conversation into a replay message. This happens after a restart or map eviction, when the model/system/tools change, when history is edited, or when a turn cannot safely be checkpointed. A stale resume can retry fresh once before the response starts.
 
-Forked transcripts accumulate under `~/.claude/projects/<encoded-workdir>/`, even though the in-memory checkpoint map is capped. There is no automatic transcript garbage collection. Stop clod and any child CLI first, identify only the folder for your dedicated `CLOD_WORKDIR`, and manually remove unwanted transcripts or that dedicated folder. Do not delete unrelated projects or credential/settings files; removing transcripts causes replay on the next use.
+Replay represents earlier roles, calls and results as text, while retaining image and document blocks. It includes a provenance note and neutralizes closing `</conversation_history>` tags inside history, but it is not a structurally isolated or injection-proof representation. Optional tool-name alignment changes only the CLI-facing presentation; the client's canonical history remains unchanged.
+
+### Provider caching
+
+CLI resume and provider prompt caching are separate mechanisms. Resume preserves native conversation structure and usually allows the provider to reuse most of the preceding input. Fresh replay changes that structure and can reduce cache reuse, although shared system/tool prefixes may still hit the provider cache. Changes to the system prompt, exposed tools or history can invalidate cached prefixes.
+
+Checkpoints are neither persisted nor shared between clod processes. Provider caches can outlive a clod restart, but clod cannot guarantee their lifetime or reuse. Logs report cache-read and cache-creation token counts; a cache hit alone does not prove that a CLI session resumed. See [cache measurements](docs/cache-measurements.md) and [protocol details](docs/protocol.md) for evidence and verification procedures.
+
+### Transcript storage
+
+Forked transcripts accumulate under `~/.claude/projects/<encoded-workdir>/` independently of the in-memory checkpoint cap. There is no automatic transcript garbage collection. To clean up, stop clod and its CLI children, identify the folder for your dedicated `CLOD_WORKDIR`, and remove only the unwanted transcripts or that folder. Do not delete unrelated projects or credential/settings files. Removing a transcript makes its checkpoint unavailable and may require fresh replay.
+
+## License
+
+Licensed under the [Apache License, Version 2.0](LICENSE).
 
 ## Caveat
 
