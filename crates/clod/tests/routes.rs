@@ -8,7 +8,11 @@ async fn shell_routes_and_invalid_body() {
     let app = router(Settings {
         listen: String::new(),
         api_key: None,
-        core: Config::new("unused"),
+        core: {
+            let mut config = Config::new("unused");
+            config.program = "/nonexistent/clod-model-test".into();
+            config
+        },
         max_concurrent: 8,
         session_cap: 256,
         max_body_bytes: 256 * 1024 * 1024,
@@ -31,15 +35,12 @@ async fn shell_routes_and_invalid_body() {
             .unwrap(),
         "ok"
     );
-    let models: Value = client
-        .get(format!("{url}/v1/models"))
-        .send()
-        .await
-        .unwrap()
-        .json()
-        .await
-        .unwrap();
-    assert!(!models["data"].as_array().unwrap().is_empty());
+    let models = client.get(format!("{url}/v1/models")).send().await.unwrap();
+    assert_eq!(models.status(), 503);
+    assert_eq!(
+        models.json::<Value>().await.unwrap()["error"]["type"],
+        "api_error"
+    );
     for path in ["/missing", "/v1/messages"] {
         let response = client.get(format!("{url}{path}")).send().await.unwrap();
         assert_eq!(response.status(), 404);

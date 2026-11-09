@@ -1,7 +1,7 @@
 //! I/O adapter for the decision-making core.
 use axum::{
     body::{Body, Bytes},
-    extract::{DefaultBodyLimit, Request as HttpRequest, State},
+    extract::{DefaultBodyLimit, Path, Query, Request as HttpRequest, State},
     http::{HeaderMap, StatusCode},
     middleware::{self, Next},
     response::{IntoResponse, Response},
@@ -271,6 +271,7 @@ struct Shared {
     permits: Arc<Semaphore>,
     clock: Instant,
     quota: Mutex<clod_core::quota::WeeklyBreaker>,
+    models: AsyncMutex<Option<(Instant, ModelDiscovery)>>,
 }
 impl Shared {
     fn now(&self) -> u64 {
@@ -283,6 +284,7 @@ pub fn router(settings: Settings) -> Router {
 pub fn router_with_groups(settings: Settings, groups: ProcessGroups) -> Router {
     let shared = Arc::new(Shared {
         groups,
+        models: AsyncMutex::new(None),
         map: Mutex::new(SessionMap::new(settings.session_cap)),
         locks: Mutex::new(HashMap::new()),
         permits: Arc::new(Semaphore::new(settings.max_concurrent)),
@@ -295,7 +297,8 @@ pub fn router_with_groups(settings: Settings, groups: ProcessGroups) -> Router {
     Router::new()
         .route("/v1/messages", post(messages))
         .route("/health", get(|| async { "ok" }))
-        .route("/v1/models", get(|| async { Json(serde_json::json!({"data":[{"id":"claude-sonnet-4-6","type":"model","display_name":"Claude Sonnet 4.6"}],"has_more":false,"first_id":"claude-sonnet-4-6","last_id":"claude-sonnet-4-6"})) }))
+        .route("/v1/models", get(models))
+        .route("/v1/models/{model}", get(model))
         .fallback(|| async { error(404, "not_found_error", "Not found") })
         .method_not_allowed_fallback(|| async { error(404, "not_found_error", "Not found") })
         .layer(DefaultBodyLimit::max(shared.settings.max_body_bytes))
@@ -341,6 +344,99 @@ async fn auth(State(shared): State<Arc<Shared>>, request: HttpRequest, next: Nex
         }
     }
     next.run(request).await
+}
+type ModelDiscovery = Result<Vec<clod_core::models::Model>, &'static str>;
+async fn discover_models(shared: &Shared) -> ModelDiscovery {
+    let mut cache = shared.models.lock().await;
+    if let Some((at, result)) = &*cache {
+        if clod_core::models::result_fresh(at.elapsed().as_millis() as u64, result.is_ok()) {
+            return result.clone();
+        }
+    }
+    let result = tokio::time::timeout(
+        Duration::from_millis(clod_core::models::DISCOVERY_TIMEOUT_MS),
+        async {
+            let _permit = shared
+                .permits
+                .acquire()
+                .await
+                .map_err(|_| "Server stopping")?;
+            probe_models(shared).await
+        },
+    )
+    .await
+    .unwrap_or(Err("Model discovery timed out"));
+    if let Err(category) = &result {
+        tracing::warn!(category, "model discovery failed");
+    }
+    *cache = Some((Instant::now(), result.clone()));
+    result
+}
+async fn probe_models(shared: &Shared) -> ModelDiscovery {
+    let mut process = Process::spawn(
+        clod_core::models::discovery_spec(&shared.settings.core),
+        shared.groups.clone(),
+    )
+    .map_err(|_| "Could not start model discovery")?;
+    process
+        .stdin
+        .as_ref()
+        .ok_or("Discovery stdin unavailable")?
+        .send(clod_core::models::initialize_line())
+        .map_err(|_| "Could not initialize model discovery")?;
+    let result = async {
+        loop {
+            tokio::select! {
+                line = process.stdout.next_line() => {
+                    let line = line.map_err(|_| "Could not read model discovery")?
+                        .ok_or("Model discovery ended without a catalog")?;
+                    if let Some(models) = clod_core::models::parse_catalog(&line)? {
+                        return Ok(models);
+                    }
+                }
+                // Drain stderr without exposing account information or blocking the child.
+                line = process.stderr.next_line(), if !process.stderr_eof => {
+                    if line.map_err(|_| "Could not read discovery stderr")?.is_none() {
+                        process.stderr_eof = true;
+                    }
+                }
+                _ = process.stdin_errors.recv() => return Err("Could not write model discovery"),
+            }
+        }
+    }
+    .await;
+    // No user turn is ever sent. Drop also kills the registered process group.
+    process.stdin.take();
+    drop(process);
+    result
+}
+async fn models(
+    State(shared): State<Arc<Shared>>,
+    query: Result<Query<clod_core::models::ListQuery>, axum::extract::rejection::QueryRejection>,
+) -> Response {
+    let query = match query {
+        Ok(Query(query)) => query,
+        Err(_) => return error(400, "invalid_request_error", "Invalid model list query"),
+    };
+    if let Err(message) = clod_core::models::validate_query(&query) {
+        return error(400, "invalid_request_error", message);
+    }
+    match discover_models(&shared).await {
+        Ok(models) => match clod_core::models::page(&models, &query) {
+            Ok(page) => Json(page).into_response(),
+            Err(message) => error(400, "invalid_request_error", message),
+        },
+        Err(message) => error(503, "api_error", message),
+    }
+}
+async fn model(State(shared): State<Arc<Shared>>, Path(id): Path<String>) -> Response {
+    match discover_models(&shared).await {
+        Ok(models) => match models.into_iter().find(|model| model.id == id) {
+            Some(model) => Json(model).into_response(),
+            None => error(404, "not_found_error", "Model not found"),
+        },
+        Err(message) => error(503, "api_error", message),
+    }
 }
 async fn messages(
     State(shared): State<Arc<Shared>>,

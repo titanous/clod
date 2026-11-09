@@ -6,6 +6,7 @@ extern crate alloc;
 extern crate std;
 
 pub mod exchange;
+pub mod models;
 pub mod name_alignment;
 pub mod protocol;
 pub mod quota;

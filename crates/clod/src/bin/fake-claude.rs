@@ -68,7 +68,11 @@ fn main() {
     let inherited_fds: Vec<_> = (3..unsafe { libc::getdtablesize() })
         .filter(|fd| unsafe { libc::fcntl(*fd, libc::F_GETFD) } >= 0)
         .collect();
-    let path = PathBuf::from(env::var_os("FAKE_CLAUDE_SCENARIO").expect("FAKE_CLAUDE_SCENARIO"));
+    let path = PathBuf::from(
+        env::var_os("FAKE_CLAUDE_SCENARIO")
+            .or_else(|| env::var_os("ANTHROPIC_BASE_URL"))
+            .expect("FAKE_CLAUDE_SCENARIO"),
+    );
     let scenario: Scenario = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
     let script = if args.iter().any(|a| a == "--resume") {
         scenario.resume.expect("unexpected resume")
@@ -128,6 +132,21 @@ fn main() {
     });
     let init = rx.recv().unwrap().expect("initialize");
     assert_eq!(init["request"]["subtype"], "initialize");
+    if init["request_id"] == "clod-models" {
+        if script.refusal.is_some() {
+            return;
+        }
+        println!(
+            "{}",
+            json!({"type":"control_response","response":{"subtype":"success","request_id":"clod-models","response":{"models":[{"value":"sonnet","displayName":"Sonnet","description":"Default model"},{"value":"opus","resolvedModel":"claude-opus-5-5","displayName":"Opus","description":"Larger model","supportsEffort":true,"supportedEffortLevels":["low","medium","high","xhigh","max"],"supportsAdaptiveThinking":true,"supportsThinkingOff":false,"supportsAutoMode":true,"supportsFastMode":true}]}}})
+        );
+        io::stdout().flush().unwrap();
+        assert!(
+            rx.recv().unwrap().is_none(),
+            "discovery must not send a user turn"
+        );
+        return;
+    }
     assert_eq!(rx.recv().unwrap().expect("user")["type"], "user");
     thread::sleep(Duration::from_millis(script.delay_ms));
     if let Some(refusal) = script.refusal {
