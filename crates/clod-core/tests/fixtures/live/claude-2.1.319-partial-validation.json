@@ -1,0 +1,29 @@
+{
+  "cli_version": "2.1.319 (Claude Code)",
+  "cli_sha256": "1f53587e92dee8e089fa349188a4cda64fa34ace6e7b0ca2ee278ddaa3cc2ebd",
+  "validation_complete": false,
+  "tested_version_marker_updated": false,
+  "provenance": "Operator-approved bounded live capture through clod, not the Meridian-dependent SDK capture driver. This is a deterministic metadata summary, not a protocol replay fixture.",
+  "ceiling": 12,
+  "forwarded_generation_attempts": 6,
+  "forwarded_model": "claude-haiku-5-5",
+  "forwarded_http_statuses": [200, 200, 200, 200, 200, 400],
+  "successful_cases": ["initial text", "refresh text", "text resume recalling cobalt", "single lookup tool", "tool-result resume returning VALUE_ALPHA"],
+  "injected_prompt_categories_observed": ["account-email reminder", "environment system-role message", "billing metadata", "Agent SDK identity", "supplied system prompt"],
+  "upstream_failure": {
+    "case": "image using the existing Phase 0 one-pixel PNG payload",
+    "http_status": 400,
+    "error": {"type": "invalid_request_error", "message": "Could not process image"}
+  },
+  "blocked_followup": {
+    "forwarded": false,
+    "gate_http_status": 403,
+    "reason": "Gate closed admission after the first upstream HTTP failure, before any further generation attempt.",
+    "cli_error": "authentication_failed",
+    "client_http_status": 401,
+    "client_error_type": "authentication_error",
+    "limitation": "This authentication classification was induced by the local gate, not an upstream authentication rejection. It is not evidence that the subscription expired. No further live request was attempted."
+  },
+  "unverified": ["successful image generation", "parallel tools and second round", "thinking/signature behavior", "stale session and UUID probes", "full injected-prompt text comparison", "prescribed five-request live smoke"],
+  "privacy": "Raw CLI initialization, prompt bodies, response sidecars, headers, account metadata, IDs, paths and transcript contents are intentionally omitted. Private ignored captures remain local; dedicated CLI transcripts were not deleted."
+}
