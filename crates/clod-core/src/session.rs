@@ -50,10 +50,10 @@ pub fn canonical_json(value: &Value) -> Vec<u8> {
 fn hash(value: &Value) -> Hash {
     Sha256::digest(canonical_json(value)).into()
 }
-/// History-only normalization. Polytoken's Anthropic serializer echoes text and
-/// L28-58 and L161-207; tool_result fields/default false are at L131-158.
-/// Images contain source (L87-98). Do not apply this to system/tools key hashing,
-/// or recurse into tool input/schema JSON: those values remain fully significant.
+/// History-only normalization retains selected text, tool-call, tool-result, and
+/// image fields, with absent tool-result is_error normalized to false.
+/// Do not apply this to system/tools key hashing or recurse into tool input/schema
+/// JSON: those values remain fully significant.
 fn history_block(block: &Value) -> Option<Value> {
     let fields: &[&str] = match block.get("type").and_then(Value::as_str) {
         Some("thinking" | "redacted_thinking") => return None,

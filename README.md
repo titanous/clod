@@ -118,6 +118,12 @@ models:
     provider: claude
     variant: claude
     class: full
+    reasoning:
+      type: effort
+      effort_set: custom
+      can_disable: true
+      levels: [low, medium, high, xhigh, max]
+      default_level: medium
     context_window: 1000000
     compaction_threshold: 0.8
     supports_vision: true
@@ -127,6 +133,12 @@ models:
     provider: claude
     variant: claude
     class: mini
+    reasoning:
+      type: effort
+      effort_set: custom
+      can_disable: true
+      levels: [low, medium, high, xhigh, max]
+      default_level: high
     context_window: 1000000
     compaction_threshold: 0.8
     supports_vision: true

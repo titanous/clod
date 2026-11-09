@@ -5,7 +5,10 @@ use serde_json::{json, Value};
 #[path = "name_alignment_templates.rs"]
 mod templates;
 
+// Require this exact introduction before rewriting library name slots;
+// arbitrary prose is not eligible.
 pub const LIBRARY_INTRO: &str = "\n\nTool calls in one assistant message run one at a time, in the order they appear. Each call completes, or is explicitly moved to the background, before the next call starts. Later calls see the effects of earlier calls that completed in the same message; a call moved to the background returns a job handle before its work finishes, so use job_block, job_status, or job_result before relying on its effects.\n\nThe following tools are available in this prompt context. Use the documented field names exactly when calling a tool.\n\n";
+// Exact accepted text boundaries following a recognized tool section.
 const IMAGE_BOUNDARY: &str = "`file_read` also reads image files (PNG, JPEG, GIF, WebP), recognized by filename extension only (.png, .jpg, .jpeg, .gif, .webp), and returns their visual content inline up to 5 MB per image. A file without a recognized image extension is returned as a binary notice even when its bytes are an image; when it is safe and authorized, copy or rename it to a supported extension and read the copy instead of attempting OCR through other tooling.";
 const SUBAGENT_BOUNDARY: &str = "You are the `general-purpose` subagent. You are a general delegate: the caller's prompt is authoritative, and you have access to the same tools the caller has (facet switching excepted: your facet is fixed for this run) plus any skill the operator has installed.\n\nPrompt:\n";
 const DEFERRED_FOOTER: &str = "\nThese tools are available via `tool_search` — query them by capability to reveal their full schema.";
@@ -81,7 +84,7 @@ impl Registry {
                 }
             }
             if fence.is_none() {
-                // Accept complete shipped sections only, never a sentence found
+                // Accept complete matching sections only, never a sentence found
                 // within arbitrary prose, a quote, or an extended section.
                 for (template, names) in templates::TEMPLATES {
                     let heading = template.lines().next().unwrap();
