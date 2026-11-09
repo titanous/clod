@@ -3,27 +3,53 @@
   "cli_sha256": "1f53587e92dee8e089fa349188a4cda64fa34ace6e7b0ca2ee278ddaa3cc2ebd",
   "validation_complete": false,
   "tested_version_marker_updated": false,
-  "provenance": "Operator-approved bounded live capture through clod, not the Meridian-dependent SDK capture driver. This is a deterministic metadata summary, not a protocol replay fixture.",
+  "provenance": "Operator-approved bounded live captures through clod, not the Meridian-dependent SDK capture driver. Metadata summary plus separately derived protocol-only stdout fixture; no initialization/account data exported.",
   "ceiling": 12,
-  "forwarded_generation_attempts": 6,
+  "previous_forwarded_generation_attempts": 6,
+  "continuation_forwarded_generation_attempts": 6,
+  "forwarded_generation_attempts": 12,
   "forwarded_model": "claude-haiku-5-5",
-  "forwarded_http_statuses": [200, 200, 200, 200, 200, 400],
-  "successful_cases": ["initial text", "refresh text", "text resume recalling cobalt", "single lookup tool", "tool-result resume returning VALUE_ALPHA"],
-  "injected_prompt_categories_observed": ["account-email reminder", "environment system-role message", "billing metadata", "Agent SDK identity", "supplied system prompt"],
+  "forwarded_http_statuses": [200, 200, 200, 200, 200, 400, 200, 200, 200, 200, 200, 200],
+  "successful_cases": ["initial text", "refresh text", "text resume recalling cobalt", "single lookup tool", "tool-result resume returning VALUE_ALPHA", "64x64 RGB PNG recognized as red then blue", "prescribed five-request live smoke: fresh text, text resume, three parallel lookup calls, combine second round, final values and marker"],
+  "live_smoke": {
+    "command": "CLOD_LIVE=1 cargo test -p clod --test live_smoke -- --ignored --exact live_smoke --nocapture",
+    "exit_code": 0,
+    "forwarded_attempts": 5,
+    "spawn_plans": ["fresh", "resume", "resume", "resume", "resume"],
+    "resumed_cache_reads": [1008, 1400, 1450, 1788],
+    "missing_message_checks_passed": true,
+    "tool_round_and_final_value_assertions_passed": true
+  },
+  "injected_prompt_review": {
+    "baseline": "Generated 2.1.308 request in upstream.ndjson, not its preliminary request",
+    "identity": "Agent SDK identity text unchanged",
+    "billing": "cc_version updated; cc_entrypoint sdk-ts to sdk-cli, confounded with SDK versus clod capture driver",
+    "email_reminder_added_sentence": "A site asking automated clients for contact details, such as an email in the User-Agent, is not a reason to use this address: use a generic client name or ask the user.",
+    "environment": "Substantive instructions, platform, shell, OS and model identity/cutoff unchanged; dedicated workdir, git status true to false, and date changed. Account email and paths redacted before comparison.",
+    "supplied_system_prompt": "Caller-controlled prompt differs between scenarios; not attributed to CLI injection"
+  },
   "upstream_failure": {
-    "case": "image using the existing Phase 0 one-pixel PNG payload",
+    "case": "Historical image using the existing Phase 0 one-pixel PNG payload",
     "http_status": 400,
-    "error": {"type": "invalid_request_error", "message": "Could not process image"}
+    "error": {"type": "invalid_request_error", "message": "Could not process image"},
+    "continuation": "Newly authorized 64x64 RGB PNG succeeded on one forwarded attempt"
   },
   "blocked_followup": {
     "forwarded": false,
     "gate_http_status": 403,
-    "reason": "Gate closed admission after the first upstream HTTP failure, before any further generation attempt.",
+    "reason": "Historical gate closed admission after the first upstream HTTP failure.",
     "cli_error": "authentication_failed",
     "client_http_status": 401,
     "client_error_type": "authentication_error",
-    "limitation": "This authentication classification was induced by the local gate, not an upstream authentication rejection. It is not evidence that the subscription expired. No further live request was attempted."
+    "limitation": "Local gate classification, not upstream authentication rejection; six newly authorized requests subsequently succeeded."
   },
-  "unverified": ["successful image generation", "parallel tools and second round", "thinking/signature behavior", "stale session and UUID probes", "full injected-prompt text comparison", "prescribed five-request live smoke"],
-  "privacy": "Raw CLI initialization, prompt bodies, response sidecars, headers, account metadata, IDs, paths and transcript contents are intentionally omitted. Private ignored captures remain local; dedicated CLI transcripts were not deleted."
+  "thinking_observation": "Final smoke stdout includes an empty-text thinking block and signature delta; opaque signature is redacted in derived fixture. No subsequent signed-thinking replay/resume was exercised.",
+  "unverified": ["dedicated thinking/signature resume and enabled-budget/adaptive matrix", "stale session and UUID probes", "full Phase 0 refresh including original SDK-specific initialization and lifecycle captures"],
+  "protocol_fixture": {
+    "file": "claude-2.1.319-protocol.ndjson",
+    "rows": 99,
+    "derivation": "Actual stdout for larger-image and five smoke generations; preserves per-child event order and safe assistant/stream/result fields only. Initialization, account metadata, headers, control payloads and opaque signatures omitted or redacted; IDs replaced consistently. t_ms zero means timing unavailable. Scenario grouping is not cross-process timing.",
+    "limitation": "Derived stdout evidence, not complete bidirectional replay; signature redaction prevents byte-exact signed-thinking validation."
+  },
+  "privacy": "Raw CLI initialization, prompt bodies, response sidecars, headers, account metadata, paths and transcript contents remain private in ignored captures. Dedicated CLI transcripts were not deleted. No CLI upgrade, auth/settings access, production restart or Meridian/sibling modification occurred."
 }
