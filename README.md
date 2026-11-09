@@ -1,6 +1,6 @@
 # clod
 
-clod is a small Anthropic Messages API proxy that drives your locally authenticated Claude Code CLI using your Claude subscription. Polytoken supplies its system prompt and tools and executes all tool calls. clod forwards generation and resumes forked CLI sessions where history matches. It is intended for a single local user, not a multi-user gateway.
+clod is a small Anthropic Messages API proxy that drives your locally authenticated Claude Code CLI using your Claude subscription. Polytoken supplies its system prompt and tools and executes client tool calls. clod forwards generation and resumes forked CLI sessions where history matches. It is intended for a single local user, not a multi-user gateway.
 
 ## Build and run
 
@@ -8,11 +8,14 @@ Install Rust and log into the `claude` CLI first, then:
 
 ```sh
 cargo build --release --workspace
-CLOD_API_KEY=test-key ./target/release/clod
-curl -H 'x-api-key: test-key' http://127.0.0.1:8787/health
+CLOD_LISTEN=127.0.0.1:3456 CLOD_API_KEY=test-key ./target/release/clod
+# In another terminal:
+curl -H 'x-api-key: test-key' http://127.0.0.1:3456/health
 ```
 
-The configured work directory must be empty, including no `.git`. Claude CLI **2.1.319** is the tested version; startup logs a warning (not a refusal) if the version differs or cannot be checked. See [protocol evidence](docs/protocol.md) before upgrading.
+Port **3456** is a custom `CLOD_LISTEN` value used by these examples; the default is **8787**. `test-key` is a placeholder; use the same key in clod and your client.
+
+`CLOD_WORKDIR` is created if needed, but must be empty **at every startup** and outside any git repository: neither it nor any parent directory may contain a `.git` file or folder. Claude CLI **2.1.319** is the tested version; startup logs a warning (not a refusal) if the version differs or cannot be checked. See [protocol evidence](docs/protocol.md) before upgrading.
 
 ### Configuration
 
@@ -25,59 +28,117 @@ All settings are environment variables. Defaults come from `crates/clod/src/lib.
 | `CLOD_MAX_BODY_BYTES` | `268435456` (256 MiB) | Maximum request body size, including image data. |
 | `CLOD_ALLOW_ANY_HOST` | unset | Only `1` permits non-loopback Host headers; never permits Origin. |
 | `CLOD_CLAUDE_BIN` | `claude` | CLI executable. |
-| `CLOD_WORKDIR` | `$XDG_STATE_HOME/clod/workdir`, or `$HOME/.local/state/clod/workdir` | Empty dedicated CLI working directory, created if needed. |
+| `CLOD_WORKDIR` | `$XDG_STATE_HOME/clod/workdir`, or `$HOME/.local/state/clod/workdir` | Dedicated CLI working directory; startup requirements above apply. |
 | `CLOD_MAX_CONCURRENT` | `8` | Global concurrent exchanges; positive integer. |
 | `CLOD_SESSION_CAP` | `256` | In-memory checkpoint LRU capacity. |
 | `CLOD_PING_MS` | `15000` | SSE ping interval in milliseconds. |
 | `CLOD_HOLD_IDLE_MS` | `60000` | Idle backstop for held tool hooks; firing invalidates checkpoint. |
 | `CLOD_TURN_TIMEOUT_MS` | `900000` | Turn timeout in milliseconds. |
-| `CLOD_MEASURE_LOG` | unset | Append decision/effect and numeric usage measurement records to this path, one complete JSON line per record (concurrent requests do not interleave). |
+| `CLOD_ALIGN_TOOL_NAMES` | unset (disabled) | Experimental CLI-facing tool-name alignment; only `1` is accepted when set. See [alignment details](docs/instruction-name-alignment.md). |
+| `CLOD_WEEKLY_BREAKER` | unset (disabled) | Only `1` enables the rolling-hour weekly-usage guard; every other set value fails startup. See [subscription usage](docs/subscription-usage.md). |
+| `CLOD_WEEKLY_BREAKER_PERCENT` | `1` | Weekly utilization rise threshold in percentage points within a rolling hour; rejects only a strictly greater rise. Must be finite, greater than 0 and at most 100, even with the guard disabled. Does not enable the guard by itself. |
+| `CLOD_MEASURE_LOG` | unset | Append decision/effect, token usage, subscription quota and rate-limit diagnostics as JSONL; create the parent directory first. |
 | `RUST_LOG` | `info` | Log filter for diagnostics on stderr, e.g. `debug` or `clod=debug`. |
 | `CLOD_UPSTREAM_BASE_URL` | unset | Measurement-only CLI traffic redirection; must be HTTP on `127.0.0.1`, `localhost` or `[::1]` (optional port), otherwise startup fails. |
-| `CLOD_SESSION_KEY` | unsupported | Any value is rejected: strict session keys are mandatory. |
 
 Do not set `CLAUDE_CONFIG_DIR`; clod removes credential overrides from the child and preserves subscription authentication. Inherited `CLOD_*`, `ANTHROPIC_*`, `CLAUDE_CODE_USE_BEDROCK` and `CLAUDE_CODE_USE_VERTEX` are scrubbed; explicit core settings and the validated measurement override are then applied. Proxy variables (`HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, `NO_PROXY` and lowercase equivalents) are deliberately inherited: review them before running.
 
-Requests carrying **any Origin header**, even `null` or localhost, get a 403 Anthropic error envelope. Host is required and must be `localhost`, `127.0.0.1` or `[::1]`, optionally with a numeric port, unless `CLOD_ALLOW_ANY_HOST=1`. This is a local-service protection, not a CORS endpoint. The working directory must also be outside every git repository, including parent directories with a `.git` file or folder.
+Requests carrying **any Origin header**, even `null` or localhost, get a 403 Anthropic error envelope. Host is required and must be `localhost`, `127.0.0.1` or `[::1]`, optionally with a numeric port, unless `CLOD_ALLOW_ANY_HOST=1`. This is a local-service protection, not a CORS endpoint.
 
-Endpoints: `POST /v1/messages`, `GET /health`, and a static `GET /v1/models` stub advertising `claude-sonnet-4-6`. The model list is **not** CLI capability discovery; requests may select other CLI-supported models. Other paths return 404. Response bodies finish once the core emits the terminal response, while process cleanup and the per-conversation lock remain active until Done.
+Endpoints: `POST /v1/messages`, `GET /health`, and `GET /v1/models`. The model list is a static placeholder advertising `claude-sonnet-4-6`, not capability discovery or an availability restriction; requests can select other CLI-supported models, such as the example below. Other paths return 404. Response bodies finish at the terminal response; CLI cleanup can continue afterward before the per-conversation lock is released.
 
 ### Logging
 
-Diagnostics go to stderr at `info` by default (colour only on a terminal, and never with a non-empty `NO_COLOR`). Stdout carries a single `listening address=<host:port>` line once the listener is bound, for supervisors and scripts that discover the port.
+Diagnostics go to stderr (`info` by default, controlled by `RUST_LOG`); stdout prints one `listening address=<host:port>` line when bound. Request logs cover session planning, CLI attempts, completion, elapsed time and final-attempt token counts when available. Request IDs correlate with measurement records. CLI stderr is logged only at `debug`.
 
-Each request's records are in a `request{id=N}` span; `N` matches the `request` field of `CLOD_MEASURE_LOG` records. At `info` a request logs `request received` (model, stream flag, message and tool counts), `session planned` (a 12-hex-digit prefix of the session key and why a fresh session would be needed, if it would), `spawning CLI` and `CLI exited` for each attempt (fresh or resume, and the resumed CLI session ID), then `request finished` with HTTP status, attempts, checkpoint effect and reason, elapsed time and the token counts from the final attempt's CLI `result` record: `input_tokens`, `output_tokens`, `cache_read_input_tokens` and `cache_creation_input_tokens`. These counts are omitted when the attempt produced no `result`. Streaming usage records are not summed. Prompt, tool and account contents are not logged; CLI stderr lines are logged at `debug` only.
+For a durable measurement log, create its parent directory and set the path when starting clod:
+
+```sh
+mkdir -p "$HOME/.local/state/clod/logs"
+CLOD_LISTEN=127.0.0.1:3456 CLOD_API_KEY=test-key \
+  CLOD_MEASURE_LOG="$HOME/.local/state/clod/logs/measurements.jsonl" \
+  ./target/release/clod
+```
+
+Token usage and cache counts are not subscription quota percentages. See [token/cache measurements](docs/cache-measurements.md), [subscription usage observations and the optional guard](docs/subscription-usage.md), and [429 sources and timing diagnostics](docs/protocol.md#rate-limit-diagnostics). Streaming usage records are not summed.
 
 ### Shutdown
 
-SIGTERM, SIGINT and SIGHUP stop accepting connections and exit with status 143, 130 and 129, respectively. These statuses follow the `128 + signal` convention; clod returns an exit code rather than re-raising the signal. SIGQUIT retains its default disposition, including core-dump semantics.
+SIGTERM, SIGINT and SIGHUP stop accepting connections and exit with status 143, 130 and 129, respectively (`128 + signal`). SIGQUIT retains its default disposition.
 
-Shutdown does **not** drain requests: in-flight responses may be cut off. Before waiting for runtime workers, clod prevents new CLI spawns and SIGKILLs each unreaped CLI's process group, including descendants that ignore stdin EOF. Spawn, reap and group cleanup are serialized so cleanup never signals a previously reaped CLI's group, whose ID could have been reused. Runtime teardown then waits at most three seconds for workers; a worker blocked in synchronous measurement or logging I/O cannot indefinitely delay exit or skip group cleanup. Further SIGTERM/SIGINT/SIGHUP signals during this bounded wait remain handled and do not bypass cleanup or extend the deadline.
+Shutdown does **not** drain requests: in-flight responses may be cut off. clod prevents new CLI spawns, kills unreaped CLI process groups (including descendants), and allows at most three seconds for runtime workers to finish. Further handled signals do not extend that deadline.
 
 ### Point Polytoken at clod
 
-Adapt the provider/model configuration used by the [Polytoken harness](docs/polytoken-harness.md):
+Merge this illustrative provider/model example into your [Polytoken configuration](https://docs.polytoken.dev/reference/configuration/):
 
-```toml
-defaults.full = "m1"
-[providers.gateway]
-kind = { type = "custom_anthropic_compatible" }
-url = "http://127.0.0.1:8787"
-auth = { type = "static_key", key = "test-key", format = "anthropic_x_api_key" }
-[models.m1]
-provider_name = "claude-sonnet-4-6"
-variant = "claude"
-provider = "gateway"
-class = "full"
-context_window = 200000
-supports_vision = true
+```yaml
+providers:
+  claude:
+    kind: {type: custom_anthropic_compatible}
+    url: http://127.0.0.1:3456
+    auth: {type: static_key, key: test-key, format: bearer_token}
+    protocol: anthropic_messages
+models:
+  'claude/claude-opus-5-5':
+    provider_name: claude-opus-5-5
+    variant: claude
+    class: full
+    max_output_tokens_per_turn: 65536
+    provider: claude
+    reasoning:
+      type: effort
+      effort_set: custom
+      can_disable: true
+      levels: [low, medium, high, xhigh, max]
+      default_level: medium
+    context_window: 1000000
+    compaction_threshold: 0.88
+    supports_vision: true
+
+  'claude/claude-fable-5-1':
+    provider_name: claude-fable-5-1
+    provider: claude
+    variant: claude
+    class: full
+    max_output_tokens_per_turn: 65536
+    reasoning:
+      type: effort
+      effort_set: custom
+      can_disable: true
+      levels: [low, medium, high, xhigh, max]
+      default_level: high
+    edit_format: search_replace
+    context_window: 1000000
+    compaction_threshold: 0.8
+    supports_vision: true
+
+  'claude/claude-sonnet-5-5':
+    provider_name: claude-sonnet-5-5
+    provider: claude
+    variant: claude
+    class: full
+    context_window: 1000000
+    compaction_threshold: 0.8
+    supports_vision: true
+
+  'claude/claude-haiku-5-5':
+    provider_name: claude-haiku-5-5
+    provider: claude
+    variant: claude
+    class: mini
+    context_window: 1000000
+    compaction_threshold: 0.8
+    supports_vision: true
 ```
 
-Match the key to `CLOD_API_KEY`, and select a CLI-supported model.
+Match the URL to `CLOD_LISTEN` and the key to `CLOD_API_KEY`, then select one of these model entries in Polytoken. The model name, limits and reasoning levels are illustrative settings, not a guarantee of support for every model, CLI version or subscription. See the [Polytoken harness](docs/polytoken-harness.md) for isolated testing.
 
 ## What the model sees
 
-The model sees Polytoken's system prompt and client tools exposed as `mcp__oc__<name>`, not Claude Code's normal built-in tools. Tool calls are forwarded as the model emitted them, minus the `mcp__oc__` prefix, even when the name was not declared (as the Anthropic API does); the CLI never executes them, and Polytoken answers unknown tools with an error result the model can recover from. Fresh replay adds a fixed provenance note. This is **not an injection-free replacement transport**: accepted Phase 0 captures also show a CLI billing metadata line, Agent SDK identity, a `# Environment` system message (working directory/platform/date/model and instructions), and an account email reminder in the first user message. See [the exact capture and limitations](docs/protocol.md).
+The model sees Polytoken's system prompt and client tools exposed as `mcp__oc__<name>`, rather than Claude Code's normal built-in tool set. clod forwards client tool calls with that prefix removed, including undeclared names; Polytoken executes them or returns an unknown-tool error. CLI tool-denial records can still appear in transcripts. Fresh replay adds a fixed provenance note.
+
+This is **not an injection-free replacement transport**: the CLI/provider path can add billing metadata, Agent SDK identity, environment instructions and account reminders. See [the captured prompt, protocol and limitations](docs/protocol.md) for details.
 
 ## Resume and caching
 
