@@ -103,7 +103,7 @@ Checkpoints are neither persisted nor shared between clod processes. Provider ca
 
 ### Transcript storage
 
-Forked transcripts accumulate under `~/.claude/projects/<encoded-workdir>/` independently of the in-memory checkpoint cap. There is no automatic transcript garbage collection. To clean up, stop clod and its CLI children, identify the folder for your dedicated `CLOD_WORKDIR`, and remove only the unwanted transcripts or that folder. Do not delete unrelated projects or credential/settings files. Removing a transcript makes its checkpoint unavailable and may require fresh replay.
+Forked transcripts accumulate under `~/.claude/projects/<encoded-workdir>/` independently of the in-memory checkpoint cap. There is no automatic transcript garbage collection. To clean up, stop clod and its CLI children, identify the folder for your dedicated `CLOD_WORKDIR`, and remove only the unwanted transcripts or that folder. Removing a transcript makes its checkpoint unavailable and may require fresh replay.
 
 ## License
 
@@ -111,4 +111,4 @@ Licensed under the [Apache License, Version 2.0](LICENSE).
 
 ## Caveat
 
-This uses Claude Code subscription authentication, not an Anthropic API key. Subscription access, rate limits, billing and permitted third-party use depend on Anthropic's current terms and your plan. Verify that your use is permitted; clod does not bypass limits or provide a compatibility guarantee.
+This uses Claude Code subscription authentication. Subscription access, rate limits, billing and permitted third-party use depend on Anthropic's current terms and your plan. Verify that your use is permitted; clod does not bypass limits or provide a compatibility guarantee.
