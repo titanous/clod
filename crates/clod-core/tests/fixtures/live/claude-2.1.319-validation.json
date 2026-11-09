@@ -1,0 +1,254 @@
+{
+  "version": "2.1.319",
+  "phase_forwarded_attempts": 3,
+  "phase_ceiling": 12,
+  "phase_statuses": [
+    200,
+    200,
+    200
+  ],
+  "prior_forwarded_attempts": 12,
+  "aggregate_forwarded_attempts": 15,
+  "scenarios": [
+    {
+      "label": "enabled",
+      "spawn": "Fresh",
+      "upstream_thinking": {
+        "type": "adaptive",
+        "display": "summarized"
+      },
+      "thinking_chars": [
+        559
+      ],
+      "signature_chars": [
+        2392
+      ],
+      "cli_client_signed_blocks_equal": true,
+      "prior_signed_blocks_upstream_equal": true,
+      "thinking_signature_deltas_equal": 0,
+      "mcp_methods": [
+        "initialize",
+        "notifications/initialized",
+        "tools/list"
+      ],
+      "hook_callbacks": 0,
+      "lifecycle": [
+        {
+          "kind": "spawn",
+          "t_ns": 5694541
+        },
+        {
+          "kind": "stdin_eof",
+          "t_ns": 4843215916
+        },
+        {
+          "kind": "stderr_eof",
+          "t_ns": 5433141875
+        },
+        {
+          "kind": "exit",
+          "t_ns": 5433492125,
+          "code": 0
+        },
+        {
+          "kind": "stdout_eof",
+          "t_ns": 5433541208
+        }
+      ],
+      "argv": [
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--input-format",
+        "stream-json",
+        "--max-turns",
+        "1",
+        "--model",
+        "haiku",
+        "--allowedTools",
+        "mcp__oc__lookup",
+        "--tools",
+        "--setting-sources=",
+        "--strict-mcp-config",
+        "--permission-mode",
+        "bypassPermissions",
+        "--allow-dangerously-skip-permissions",
+        "--include-partial-messages",
+        "--max-thinking-tokens",
+        "4096",
+        "--thinking-display",
+        "summarized"
+      ]
+    },
+    {
+      "label": "adaptive",
+      "spawn": "Resume",
+      "upstream_thinking": {
+        "type": "adaptive",
+        "display": "summarized"
+      },
+      "thinking_chars": [
+        385
+      ],
+      "signature_chars": [
+        2412
+      ],
+      "cli_client_signed_blocks_equal": true,
+      "prior_signed_blocks_upstream_equal": true,
+      "thinking_signature_deltas_equal": 43,
+      "mcp_methods": [
+        "initialize",
+        "notifications/initialized",
+        "tools/list"
+      ],
+      "hook_callbacks": 1,
+      "lifecycle": [
+        {
+          "kind": "spawn",
+          "t_ns": 5307500
+        },
+        {
+          "kind": "stdin_eof",
+          "t_ns": 3766326833
+        },
+        {
+          "kind": "stderr_eof",
+          "t_ns": 4109776208
+        },
+        {
+          "kind": "exit",
+          "t_ns": 4109885916,
+          "code": 1
+        },
+        {
+          "kind": "stdout_eof",
+          "t_ns": 4109936041
+        }
+      ],
+      "argv": [
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--input-format",
+        "stream-json",
+        "--max-turns",
+        "1",
+        "--model",
+        "haiku",
+        "--resume",
+        "capture-id-5",
+        "--allowedTools",
+        "mcp__oc__lookup",
+        "--tools",
+        "--setting-sources=",
+        "--strict-mcp-config",
+        "--permission-mode",
+        "bypassPermissions",
+        "--allow-dangerously-skip-permissions",
+        "--include-partial-messages",
+        "--fork-session",
+        "--resume-session-at",
+        "capture-id-189",
+        "--thinking-display",
+        "summarized"
+      ]
+    },
+    {
+      "label": "signed-resume",
+      "spawn": "Resume",
+      "upstream_thinking": {
+        "type": "adaptive",
+        "display": "summarized"
+      },
+      "thinking_chars": [
+        314
+      ],
+      "signature_chars": [
+        1560
+      ],
+      "cli_client_signed_blocks_equal": true,
+      "prior_signed_blocks_upstream_equal": true,
+      "thinking_signature_deltas_equal": 0,
+      "mcp_methods": [
+        "initialize",
+        "notifications/initialized",
+        "tools/list"
+      ],
+      "hook_callbacks": 0,
+      "lifecycle": [
+        {
+          "kind": "spawn",
+          "t_ns": 7106167
+        },
+        {
+          "kind": "stdin_eof",
+          "t_ns": 2425833417
+        }
+      ],
+      "argv": [
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--input-format",
+        "stream-json",
+        "--max-turns",
+        "1",
+        "--model",
+        "haiku",
+        "--resume",
+        "capture-id-199",
+        "--allowedTools",
+        "mcp__oc__lookup",
+        "--tools",
+        "--setting-sources=",
+        "--strict-mcp-config",
+        "--permission-mode",
+        "bypassPermissions",
+        "--allow-dangerously-skip-permissions",
+        "--include-partial-messages",
+        "--fork-session",
+        "--resume-session-at",
+        "capture-id-299",
+        "--thinking-display",
+        "summarized"
+      ]
+    },
+    {
+      "label": "missing-session",
+      "result_subtype": "error_during_execution",
+      "exit_code": 1,
+      "provider_requests": 0
+    },
+    {
+      "label": "missing-uuid",
+      "result_subtype": "error_during_execution",
+      "exit_code": 1,
+      "provider_requests": 0
+    }
+  ],
+  "limitations": [
+    "clod direct protocol capture replaces SDK driver; SDK serialization/exception semantics are not claimed",
+    "Initialization values outside CLI version, hooks and permission mode redacted; keys retained",
+    "Opaque signatures redacted in exported fixtures; exact comparisons performed on private captures",
+    "Lifecycle timestamps are wrapper observations, not proof of internal CLI scheduling",
+    "No live interrupt test; unchanged historical limitation",
+    "Historical negative one-pixel fixture retained unchanged",
+    "Final signed-resume wrapper was terminated during driver cleanup after HTTP completion; final exit/EOF lifecycle not observed"
+  ],
+  "offline_checks": {
+    "result": "passed",
+    "commands": [
+      "cargo fmt --all",
+      "cargo test --workspace",
+      "cargo test -p clod --features test-support",
+      "cargo clippy --workspace --all-targets -- -D warnings",
+      "cargo clippy --workspace --all-targets --features clod/test-support -- -D warnings",
+      "python3 -I scripts/polytoken-harness/test_harness.py",
+      "python3 -I scripts/test-cache-recorder.py",
+      "node scripts/test-upstream.mjs",
+      "node scripts/test-upstream-error.mjs",
+      "node scripts/test-capture-image.mjs"
+    ],
+    "final_sanitizer_followup": "cargo test -p clod-core --test claude_2319 and git diff --check passed after additional system/rate-limit value redaction"
+  }
+}

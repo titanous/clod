@@ -61,7 +61,7 @@ fn main() {
         }
     }
     if args == ["--version"] {
-        println!("2.1.308 (Claude Code)");
+        println!("2.1.319 (Claude Code)");
         return;
     }
     // Inspect before opening scenario/log files: these descriptors crossed exec.

@@ -12,7 +12,7 @@ CLOD_API_KEY=test-key ./target/release/clod
 curl -H 'x-api-key: test-key' http://127.0.0.1:8787/health
 ```
 
-The configured work directory must be empty, including no `.git`. Claude CLI **2.1.308** is the tested version; startup logs a warning (not a refusal) if the version differs or cannot be checked. See [protocol evidence](docs/protocol.md) before upgrading.
+The configured work directory must be empty, including no `.git`. Claude CLI **2.1.319** is the tested version; startup logs a warning (not a refusal) if the version differs or cannot be checked. See [protocol evidence](docs/protocol.md) before upgrading.
 
 ### Configuration
 

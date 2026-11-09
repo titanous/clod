@@ -109,7 +109,7 @@ impl UsageCounts {
         }
     }
 }
-pub const TESTED_CLAUDE_VERSION: &str = "2.1.308";
+pub const TESTED_CLAUDE_VERSION: &str = "2.1.319";
 #[derive(Clone)]
 pub struct Settings {
     pub listen: String,

@@ -7,6 +7,29 @@ import os from 'node:os';
 import { createHash, randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { deflateSync } from 'node:zlib';
+// A real 64×64 RGB image; the historical one-pixel rejection stays in e-image.ndjson.
+function image64() {
+  const crc32 = data => {
+    let crc = 0xffffffff;
+    for (const byte of data) {
+      crc ^= byte;
+      for (let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0);
+    }
+    return (crc ^ 0xffffffff) >>> 0;
+  };
+  const chunk = (type, data) => {
+    const body = Buffer.concat([Buffer.from(type), data]);
+    const size = Buffer.alloc(4); size.writeUInt32BE(data.length);
+    const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(body));
+    return Buffer.concat([size, body, crc]);
+  };
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(64, 0); header.writeUInt32BE(64, 4); header[8] = 8; header[9] = 2;
+  const pixels = Buffer.alloc(64 * (1 + 64 * 3));
+  for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++) pixels[y * 193 + 1 + x * 3 + (x < 32 ? 0 : 2)] = 255;
+  return Buffer.concat([Buffer.from('89504e470d0a1a0a', 'hex'), chunk('IHDR', header), chunk('IDAT', deflateSync(pixels)), chunk('IEND', Buffer.alloc(0))]).toString('base64');
+}
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const run = process.env.CLOD_CAPTURE_RUN || new Date().toISOString().replaceAll(':','-');
 const base = path.join(root, 'scripts/captures', run);
@@ -64,6 +87,6 @@ if(['all','a'].includes(selected)){const a=await turn('a-text','Remember the wor
 if(['all','b','upstream'].includes(selected)){const b=await turn(selected==='upstream'?'upstream-tool':'b-tool','Call lookup once with key alpha. Do not answer without calling it.');if(b.calls.length)await turn(selected==='upstream'?'upstream-tool-resume':'b-tool-resume',results(b,'Report the exact returned value, no more tools.'),b);}
 if(['all','c'].includes(selected)){const c=await turn('c-parallel','Call lookup THREE times in parallel, keys alpha, beta, gamma. Do not combine them or answer without tools.');if(c.calls.length){const c2=await turn('c-second-round',results(c,'Now call combine once with all three returned values. Do not answer yet.'),c);if(c2.calls.length)await turn('c-final',results(c2,'Report all original values and the combined result. Do not call more tools.'),c2);}}
 if(['all','d'].includes(selected))await turn('d-thinking','What is 17 times 23? Think briefly then give only the number.',null,{model:'sonnet',thinking:{type:'enabled',budgetTokens:1024}});
-if(['all','e'].includes(selected))await turn('e-image',[{type:'image',source:{type:'base64',media_type:'image/png',data:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6nS8AAAAASUVORK5CYII='}},{type:'text',text:'Describe the image in five words or fewer.'}]);
+if(['all','e'].includes(selected))await turn('e-image',[{type:'image',source:{type:'base64',media_type:'image/png',data:image64()}},{type:'text',text:'Describe the image in five words or fewer.'}]);
 if(['all','f'].includes(selected)){await turn('f-missing-session','Say OK.',{session_id:randomUUID(),uuid:randomUUID()});const seed=await turn('f-seed','Say OK.');await turn('f-missing-uuid','Say OK.',{...seed,uuid:randomUUID()});}
 console.log('Capture directory:',base);
